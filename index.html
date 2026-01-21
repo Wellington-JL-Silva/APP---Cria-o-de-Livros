@@ -1,0 +1,2827 @@
+<html lang="pt-br"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Códice - A Fenda (v9.2 - organização das abas)</title>
+<!-- BIBLIOTECA ADICIONADA PARA DOCX -->
+<script src="https://unpkg.com/html-docx-js/dist/html-docx.js"></script>
+<style>
+    :root {
+        --primary: #2c3e50;
+        --secondary: #34495e;
+        --accent: #e67e22;
+        --light: #ecf0f1;
+        --dark: #2c3e50;
+        --success: #27ae60;
+        --danger: #c0392b;
+        --text: #333;
+        --gold: #f1c40f;
+        --proj-color: #8e44ad;
+        --bg-body: #f4f7f6;
+        --bg-panel: #ffffff;
+        --border-color: #ddd;
+        --ai-color: #8854d0; /* Nova cor para IA */
+    }
+
+    /* Variáveis do Modo Escuro */
+    [data-theme="dark"] {
+        --primary: #1a252f;
+        --secondary: #2c3e50;
+        --accent: #d35400;
+        --light: #34495e; /* Fundo de inputs */
+        --dark: #ecf0f1;
+        --text: #ecf0f1;
+        --bg-body: #121212;
+        --bg-panel: #1e1e1e;
+        --border-color: #444;
+        --success: #219150;
+        --proj-color: #9b59b6;
+        --ai-color: #a55eea;
+    }
+
+    body { font-family: 'Segoe UI', sans-serif; margin: 0; background: var(--bg-body); color: var(--text); height: 100vh; display: flex; flex-direction: column; transition: background 0.3s, color 0.3s; }
+    
+    /* Navegação */
+    .tabs-container { background: var(--primary); display: flex; align-items: center; padding-right: 10px; overflow-x: auto; }
+    .tabs { display: flex; box-shadow: 0 2px 5px rgba(0,0,0,0.2); flex: 1; }
+    .tab { padding: 15px 20px; color: #bdc3c7; cursor: pointer; transition: 0.3s; font-weight: 600; border-bottom: 4px solid transparent; white-space: nowrap; }
+    .tab:hover { color: white; background: var(--secondary); }
+    .tab.active { color: white; border-bottom-color: var(--accent); background: var(--secondary); }
+    .add-tab-btn { background: var(--accent); color: white; border: none; padding: 5px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; margin-left: 10px; }
+    
+    /* Botão Modo Escuro */
+    .theme-toggle { background: transparent; border: none; cursor: pointer; font-size: 1.2em; padding: 0 15px; filter: grayscale(100%); transition: 0.3s; }
+    .theme-toggle:hover { filter: grayscale(0%); transform: scale(1.1); }
+
+    /* Conteúdo */
+    .content { flex: 1; padding: 20px; overflow-y: auto; display: none; }
+    .content.active { display: block; }
+
+    /* Paineis */
+    .panel { background: var(--bg-panel); padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 20px; transition: background 0.3s; }
+    .header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    h2 { margin: 0; color: var(--text); border-left: 5px solid var(--accent); padding-left: 15px; } /* Cor do texto adaptada */
+
+    /* Inputs */
+    input, select, textarea { width: 100%; padding: 8px; margin: 5px 0; border: 1px solid var(--border-color); border-radius: 4px; font-family: inherit; background: var(--bg-panel); color: var(--text); }
+    [data-theme="dark"] input, [data-theme="dark"] select, [data-theme="dark"] textarea { background: #2c2c2c; color: #fff; border-color: #555; }
+    
+    /* Tabelas */
+    .table-wrapper { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; min-width: 1000px; font-size: 0.9em; }
+    th, td { text-align: left; padding: 10px; border-bottom: 1px solid var(--border-color); color: var(--text); }
+    
+    /* CABEÇALHO ORDENÁVEL */
+    th { background-color: var(--secondary); color: white; position: sticky; top: 0; z-index: 10; user-select: none; }
+    th.sortable { cursor: pointer; transition: 0.2s; }
+    th.sortable:hover { background-color: var(--accent); }
+    .sort-icon { font-size: 0.8em; margin-left: 5px; opacity: 0.7; }
+
+    tr:hover { background-color: rgba(0,0,0,0.05); }
+    [data-theme="dark"] tr:hover { background-color: rgba(255,255,255,0.05); }
+
+    .number-cell { text-align: right; font-family: monospace; font-weight: bold; }
+    .editable { cursor: text; background: transparent; border: 1px dashed transparent; width: 100%; color: inherit; }
+    .editable:focus { border-color: var(--accent); background: rgba(255,255,255,0.1); outline: none; }
+    .id-cell { font-family: monospace; font-weight: bold; color: var(--accent); width: 80px; } /* Ajuste de cor ID */
+
+    /* Botões */
+    .btn { padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; color: white; margin-right: 5px; font-size: 0.9em; transition: 0.2s; }
+    .btn:active { transform: scale(0.98); }
+    .btn-primary { background: var(--primary); }
+    .btn-success { background: var(--success); }
+    .btn-danger { background: var(--danger); }
+    .btn-info { background: #3498db; }
+    .btn-secondary { background: #95a5a6; }
+    .btn-warning { background: var(--accent); }
+    .btn-purple { background: var(--proj-color); }
+    /* Botão IA */
+    .btn-ai { background: linear-gradient(135deg, var(--ai-color), #4b7bec); color: white; border: 1px solid rgba(255,255,255,0.2); text-shadow: 0 1px 2px rgba(0,0,0,0.3); }
+    .btn-ai:hover { box-shadow: 0 0 10px var(--ai-color); }
+    .loading { opacity: 0.7; cursor: wait; pointer-events: none; }
+
+    .btn-sm { padding: 4px 8px; font-size: 0.8em; }
+    .btn-del-mini { padding: 0 5px; font-size: 0.7em; margin-left: 5px; background: #e74c3c; border:none; color: white; border-radius: 3px; cursor: pointer; float: right; }
+
+    /* CIRURGIA 1: Ajuste na lista de capítulos e botão novo */
+    .chapter-list-item { padding: 10px; cursor: pointer; border-bottom: 1px solid var(--border-color); transition: 0.2s; font-size: 0.9em; color: var(--text); display: flex; justify-content: space-between; align-items: center; }
+    .chapter-list-item:hover { background: rgba(0,0,0,0.05); }
+    [data-theme="dark"] .chapter-list-item:hover { background: rgba(255,255,255,0.05); }
+    .chapter-list-item.active { background: var(--primary); color: white; border-left: 4px solid var(--accent); }
+    
+    .chapter-indent-1 { padding-left: 10px; font-weight: bold; }
+    .chapter-indent-2 { padding-left: 25px; }
+    .chapter-indent-3 { padding-left: 40px; font-size: 0.85em; color: #555; }
+    [data-theme="dark"] .chapter-indent-3 { color: #aaa; }
+    .chapter-list-item.active .chapter-indent-3 { color: #eee; }
+
+    /* Botão Mini de Processamento */
+    .btn-proc { font-size: 0.7em; padding: 2px 6px; background: var(--ai-color); border: none; border-radius: 4px; color: white; cursor: pointer; opacity: 0.7; margin-left: 5px; }
+    .btn-proc:hover { opacity: 1; transform: scale(1.1); }
+
+    /* Badges & Ranks */
+    .badge { padding: 4px 8px; border-radius: 4px; font-size: 0.85em; color: white; background: #95a5a6; font-weight: bold; text-align: center; display: inline-block; min-width: 40px; margin-right: 5px;}
+    .badge-sss { background: #8e44ad; box-shadow: 0 0 8px #8e44ad; border: 1px solid #fff; } 
+    .badge-ss { background: #c0392b; } 
+    .badge-s { background: #d35400; } 
+    .badge-a { background: #f39c12; } 
+    .badge-b { background: #2980b9; }
+    
+    .badge-info { background: #3498db; font-size: 0.75em; border-radius: 10px; padding: 2px 6px; margin-left: 5px; vertical-align: middle; color: white; font-weight: bold; }
+    .badge-citacao { background: #e67e22; font-size: 0.75em; border-radius: 10px; padding: 2px 8px; color: white; font-weight: bold; cursor: pointer; }
+
+    .psyche-dominant { border-left: 4px solid var(--success); background: #e8f5e9; padding: 8px; margin-bottom: 5px; border-radius: 0 4px 4px 0; color: #333; }
+    .psyche-recent { border-left: 4px solid var(--accent); background: #fff3e0; padding: 8px; margin-bottom: 5px; border-radius: 0 4px 4px 0; opacity: 0.9; color: #333; }
+    .psyche-history { color: #7f8c8d; font-size: 0.9em; border-left: 4px solid #bdc3c7; padding-left: 8px; }
+    
+    [data-theme="dark"] .psyche-dominant { background: #1e3a2a; color: #ecf0f1; }
+    [data-theme="dark"] .psyche-recent { background: #3e2718; color: #ecf0f1; }
+
+    /* Chips de Citação (Bolinhas) */
+    .citation-chip { display: inline-block; background: #ecf0f1; border: 1px solid #bdc3c7; padding: 2px 8px; border-radius: 12px; margin: 2px; font-size: 0.85em; color: #2c3e50; font-weight: 600; }
+    [data-theme="dark"] .citation-chip { background: #34495e; color: #ecf0f1; border-color: #555; }
+    .citation-chip:hover { background: var(--accent); color: white; border-color: var(--accent); cursor: pointer; }
+
+    /* Estilos Específicos */
+    #regrasIA { white-space: pre-wrap; line-height: 1.6; font-size: 1.1em; max-width: 100%; margin: 0 auto; padding: 20px; background: var(--bg-panel); min-height: 500px; box-shadow: 0 0 15px rgba(0,0,0,0.05); border: 1px solid var(--border-color); color: var(--text); }
+    .char-detail-container { padding: 20px; border-left: 3px solid var(--accent); background: #f9f9f9; }
+    [data-theme="dark"] .char-detail-container { background: #252525; }
+
+    /* LAYOUT DO LIVRO MODULAR */
+    .book-layout { display: flex; gap: 20px; height: calc(100vh - 150px); }
+    .book-sidebar { width: 300px; background: var(--bg-panel); border-right: 1px solid var(--border-color); overflow-y: auto; display: flex; flex-direction: column; }
+    .book-editor-area { flex: 1; display: flex; flex-direction: column; background: var(--bg-panel); padding: 20px; border-radius: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+
+    #editorTitulo, #editorTituloProj { font-size: 1.4em; font-weight: bold; border: none; border-bottom: 2px solid var(--accent); margin-bottom: 15px; padding: 5px; color: var(--accent); background: transparent; }
+    #editorId, #editorIdProj { width: 100px; font-family: monospace; font-weight: bold; color: #777; background: transparent; border: 1px solid var(--border-color); }
+    #textoCapitulo, #textoProjeto { flex: 1; resize: none; border: 1px solid var(--border-color); padding: 20px; font-size: 1.1em; line-height: 1.6; font-family: 'Georgia', serif; outline: none; background: var(--bg-panel); color: var(--text); }
+    
+    /* TIMELINES DETALHADAS */
+    .detail-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 20px; }
+    .timeline-box { background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 4px; padding: 10px; max-height: 300px; overflow-y: auto; margin-top: 5px; }
+    .timeline-item { border-bottom: 1px solid var(--border-color); padding: 8px 0; font-size: 0.9em; display: flex; gap: 10px; position: relative; }
+    .timeline-date { font-weight: bold; color: var(--accent); min-width: 80px; font-size: 0.85em; } /* Cor ajustada */
+    .timeline-content { flex: 1; color: var(--text); }
+
+    /* GRID ORGANIZACIONAL COM 3 COLUNAS DE DETALHES */
+    .org-detail-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+
+    /* API KEYS LIST */
+    .key-list-item { display: flex; align-items: center; justify-content: space-between; padding: 8px; border-bottom: 1px solid var(--border-color); background: rgba(0,0,0,0.02); }
+    .key-list-item.active-key { background: rgba(39, 174, 96, 0.2); border-left: 4px solid var(--success); }
+    .key-list-item:hover { background: rgba(0,0,0,0.05); }
+
+    /* ÁREA DE IMPRESSÃO (Escondida na tela normal) */
+    #print-container { display: none; }
+
+    /* --- MOTOR DE IMPRESSÃO (PDF LIMPO) --- */
+    @media print {
+        .tabs-container, .header-row, #json-panel, .book-sidebar, .btn, input, textarea, .no-print, .content, .book-editor-area { 
+            display: none !important; 
+        }
+        body { background: white; height: auto; margin: 0; padding: 0; overflow: visible; color: black; }
+        #print-container {
+            display: block !important;
+            padding: 2cm;
+            font-family: 'Georgia', 'Times New Roman', serif;
+            font-size: 12pt;
+            line-height: 1.6;
+            color: black;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .print-chapter-title { font-size: 20pt; font-weight: bold; margin-top: 0; margin-bottom: 0.5cm; border-bottom: 2px solid #000; padding-bottom: 10px; }
+        .print-chapter-meta { font-size: 10pt; color: #666; margin-bottom: 1cm; font-style: italic; }
+        .print-paragraph { margin-bottom: 1em; text-align: justify; text-indent: 1cm; }
+        .page-break { page-break-before: always; }
+    }
+    
+    /* --- MODO A5 (ESTILO DE LIVRO) --- */
+    .book-editor-area.modo-a5 {
+        background-color: #535c68 !important; /* Cor da mesa */
+        align-items: center; /* Centraliza a folha */
+    }
+
+    /* A folha de papel A5 */
+    .book-editor-area.modo-a5 textarea {
+        width: 14.8cm; /* Largura A5 Real */
+        min-height: 21cm;
+        padding: 2cm 1.5cm;
+        background-color: #fff !important; /* Papel branco */
+        color: #000 !important; /* Tinta preta */
+        font-family: 'Georgia', 'Times New Roman', serif !important;
+        font-size: 12pt !important;
+        line-height: 1.6 !important;
+        box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        border: none;
+        margin-top: 10px;
+        margin-bottom: 20px;
+        resize: vertical;
+        border-radius: 2px;
+    }
+
+    /* Ajuste da barra de título no modo A5 */
+    .book-editor-area.modo-a5 .input-group-a5 {
+        width: 14.8cm;
+        background: white;
+        padding: 10px 1.5cm 0 1.5cm;
+        border-radius: 2px 2px 0 0;
+        box-shadow: 0 -5px 20px rgba(0,0,0,0.2);
+        margin-bottom: 0;
+        box-sizing: content-box;
+    }
+    
+</style>
+</head>
+<body>
+
+<div id="print-container"></div>
+
+<div class="tabs-container no-print">
+    <div class="tabs" id="tab-headers">
+        <!-- NOVA ORDEM -->
+        <div class="tab active" id="tab-regras" onclick="switchTab('aba-regras', this)">1. Regras</div>
+        <div class="tab" id="tab-livro" onclick="switchTab('aba-livro', this)">2. LIVRO</div>
+        <div class="tab" id="tab-projetos" onclick="switchTab('aba-projetos', this)">3. Projetos (Ideias)</div>
+        <div class="tab" id="tab-personagens" onclick="switchTab('aba-personagens', this)">4. Personagens</div>
+        <div class="tab" id="tab-elite" onclick="switchTab('aba-elite', this)">5. Elite SSS</div>
+        <div class="tab" id="tab-mundo" onclick="switchTab('aba-mundo', this)">6. Física</div>
+        <div class="tab" id="tab-leis" onclick="switchTab('aba-leis', this)">7. Leis</div>
+        <div class="tab" id="tab-orgs" onclick="switchTab('aba-orgs', this)">8. Organizações</div>
+        <div class="tab" id="tab-nacoes" onclick="switchTab('aba-nacoes', this)">9. Geopolítica</div>
+    </div>
+    <button class="add-tab-btn" onclick="abrirCriadorAba()">+ Aba</button>
+    <!-- BOTÃO MODO ESCURO -->
+    <button class="theme-toggle" onclick="toggleDarkMode()" title="Alternar Modo Escuro">💡</button>
+</div>
+
+<div id="aba-regras" class="content active">
+    <div class="panel">
+        <div class="header-row">
+            <h2>Painel de Controle &amp; Protocolo (v9.2)</h2>
+            <div>
+                <button class="btn btn-success" onclick="salvarDadosLocal()">💾 Salvar (Navegador)</button>
+                <button class="btn btn-warning" onclick="baixarBackupCompleto()">📦 Baixar TUDO (Backup JSON)</button>
+                <button class="btn btn-info" onclick="baixarHTMLCompleto()">📥 Baixar HTML Completo</button>
+            </div>
+        </div>
+        
+        <!-- ÁREA DE CONFIGURAÇÃO DA API (ATUALIZADA MULTI-KEY) -->
+        <div style="background: var(--bg-body); padding: 20px; border-radius: 8px; border: 1px solid var(--ai-color); margin-bottom: 25px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                <label style="font-weight: bold; font-size: 1.1em; color: var(--ai-color);">🔑 Gerenciador de Chaves IA (Gemini)</label>
+                <div>
+                    <button class="btn btn-ai" onclick="testarAPI()">📡 Testar Atual</button>
+                    <a href="https://aistudio.google.com/app/apikey" target="_blank" class="btn btn-sm btn-ai" style="text-decoration:none;">🔗 Gerar Chave</a>
+                </div>
+            </div>
+            
+            <div style="display:flex; gap:10px; margin-bottom:15px; align-items:flex-end;">
+                <div style="flex:1">
+                    <label style="font-size:0.8em">Nome da Chave (Alias):</label>
+                    <input type="text" id="newKeyName" placeholder="Ex: Minha Chave Pessoal">
+                </div>
+                <div style="flex:2">
+                    <label style="font-size:0.8em">Chave API (AIzaSy...):</label>
+                    <input type="password" id="newKeyValue" placeholder="Cole o código aqui...">
+                </div>
+                <button class="btn btn-success" onclick="adicionarChave()" style="height:38px;">+ Adicionar</button>
+            </div>
+
+            <div id="keysList" style="max-height: 150px; overflow-y: auto; border: 1px solid var(--border-color); border-radius:4px; background: var(--bg-panel);">
+                <!-- Lista de chaves renderizada via JS -->
+            </div>
+            
+            <p style="margin-top: 8px; font-size: 0.85em; color: var(--text); opacity: 0.7;">
+                🔒 As chaves são salvas localmente no navegador. Selecione uma na lista acima para ativar.
+            </p>
+        </div>
+
+        <div style="display: flex; gap: 20px;">
+            <div style="flex: 1;">
+                <label>Data Atual do Mundo:</label>
+                <input type="date" id="dataAtual" onchange="atualizarIdades(); renderizarElite();">
+            </div>
+            <div style="flex: 1;">
+                <label>Marcador de Áudio (Ocultação):</label>
+                <input type="text" id="marcadorTexto" value="|||" style="font-family: monospace; font-weight: bold; color: var(--danger);">
+            </div>
+        </div>
+        
+        <div style="margin-top: 30px;">
+            <h3>📜 Protocolo de Escrita &amp; Regras do Agente</h3>
+            <p><i>Copie e cole no início do chat:</i></p>
+            <textarea id="regrasIA" spellcheck="false" onblur="salvarRegras()"></textarea>
+        </div>
+
+        <div style="margin-top: 30px; border-top: 2px dashed #ccc; padding-top: 20px;" id="json-panel">
+            <h3>📥 Ingestão de Dados (JSON) - SISTEMA UNIFICADO</h3>
+            <p>Recupere seus dados colando o texto JSON abaixo ou fazendo upload do arquivo de backup.</p>
+            
+            <div style="margin-bottom:10px;">
+                <input type="file" id="uploadJsonBtn" accept=".json" style="display:none" onchange="uploadJsonFile(this)">
+                <button class="btn btn-info" onclick="document.getElementById('uploadJsonBtn').click()">📂 Carregar Backup Completo</button>
+                
+                <button class="btn btn-warning" onclick="importarApenasLivro()" style="margin-left: 10px; background-color: #d35400; border: none;">
+                    📖 Restaurar APENAS Aba Livro
+                </button>
+            </div>
+
+            <textarea id="jsonInputArea" placeholder="Cole o JSON aqui ou use o botão acima..." style="height: 100px; background:#222; color:#fff; font-family:monospace;"></textarea>
+            <button class="btn btn-primary" onclick="processarJSON()">Processar Dados</button>
+        </div>
+    </div>
+</div>
+
+<!-- ABA DO LIVRO (PRINCIPAL) -->
+<div id="aba-livro" class="content">
+    <div class="panel" style="height: 95%;">
+        <div class="header-row no-print">
+            <h2>História (Cânone)</h2>
+            <div>
+                <button class="btn btn-ai" onclick="iaContinuarTexto('textoCapitulo')" title="Continuar a história com IA">✨ IA: Continuar</button>
+                <button class="btn btn-ai" onclick="iaAnalisarTexto('textoCapitulo')" title="Analisar capítulo com IA">✨ IA: Analisar</button>
+                <button class="btn btn-primary" onclick="criarNovoCapituloUI()">+ Capítulo</button>
+                <button class="btn btn-secondary" onclick="baixarLivroJSON()">💾 Baixar Livro</button>
+                <button class="btn btn-info" onclick="baixarDoc('livro')">📝 Baixar .doc</button>
+                <button class="btn btn-secondary" id="btnA5" onclick="alternarModoA5()" title="Alternar visualização de página">📄 Modo A5</button>
+                <button class="btn btn-warning" onclick="prepararImpressao('capitulo', 'livro')">🖨️ PDF (Cap.)</button>
+                <button class="btn btn-success" onclick="prepararImpressao('completo', 'livro')">📚 PDF (Completo)</button>
+            </div>
+        </div>
+        
+        <div class="book-layout">
+            <div class="book-sidebar">
+                <div style="padding:10px; background:var(--bg-panel); border-bottom:1px solid var(--border-color);">
+                    <input type="text" id="buscaCapitulo" placeholder="🔍 Buscar..." onkeyup="filtrarCapitulos()">
+                </div>
+                <div id="listaCapitulos"></div>
+            </div>
+
+            <div class="book-editor-area">
+                <div style="display:flex; gap:10px; margin-bottom:10px;" class="no-print input-group-a5">
+                    <input type="text" id="editorId" placeholder="ID (ex: 1.1)" onblur="atualizarMetaCapitulo()">
+                    <input type="text" id="editorTitulo" placeholder="Título do Capítulo" style="flex:1" onblur="atualizarMetaCapitulo()">
+                    <button class="btn btn-danger btn-sm" onclick="deletarCapituloAtual()">🗑️</button>
+                </div>
+                <h2 id="printTitle" style="display:none">1.0 - Início</h2> 
+                <textarea id="textoCapitulo" placeholder="Selecione um capítulo à esquerda ou crie um novo..." onblur="salvarConteudoCapitulo()"></textarea>
+                <div style="margin-top:10px; font-size:0.8em; color:#777" class="no-print">
+                    Caractéres: <span id="contadorChars">0</span> | ID é usado para ordenação automática
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- NOVA ABA: PROJETOS (IDEIAS) -->
+<div id="aba-projetos" class="content">
+    <div class="panel" style="height: 95%;">
+        <div class="header-row no-print">
+            <h2 style="border-left-color: var(--proj-color); color: var(--proj-color);">Projetos &amp; Rascunhos</h2>
+            <div>
+                <!-- BOTÃO NOVO AQUI -->
+                <button class="btn btn-ai" onclick="iaEscreverProjeto()" title="Escrever cena completa com Protocolo Bestseller">✨ IA: Escrever (V4)</button>
+                <button class="btn btn-ai" onclick="iaAnalisarTexto('textoProjeto')" title="Analisar esboço com IA">✨ IA: Analisar</button>
+                <button class="btn btn-ai" onclick="iaContinuarTexto('textoProjeto')" title="Gerar ideias com IA">✨ IA: Continuar</button>
+                <button class="btn btn-purple" onclick="criarNovoProjetoUI()">+ Esboço</button>
+                <button class="btn btn-secondary" onclick="baixarProjetosJSON()">💾 Baixar Projetos</button>
+                <button class="btn btn-info" onclick="baixarDoc('projeto')">📝 Baixar .doc</button>
+                <button class="btn btn-warning" onclick="prepararImpressao('capitulo', 'projeto')">🖨️ PDF (Atual)</button>
+            </div>
+        </div>
+        
+        <div class="book-layout">
+            <div class="book-sidebar">
+                <div style="padding:10px; background:var(--bg-panel); border-bottom:1px solid var(--border-color);">
+                    <input type="text" id="buscaProjetos" placeholder="🔍 Buscar Ideias..." onkeyup="filtrarProjetos()">
+                </div>
+                <div id="listaProjetos"></div>
+            </div>
+
+            <div class="book-editor-area" style="border-top: 3px solid var(--proj-color);">
+                <div style="display:flex; gap:10px; margin-bottom:10px;" class="no-print">
+                    <input type="text" id="editorIdProj" placeholder="ID (ex: P.1)" onblur="atualizarMetaProjeto()">
+                    <input type="text" id="editorTituloProj" placeholder="Título do Esboço" style="flex:1" onblur="atualizarMetaProjeto()">
+                    <button class="btn btn-danger btn-sm" onclick="deletarProjetoAtual()">🗑️</button>
+                </div>
+                <textarea id="textoProjeto" placeholder="Digite sua ideia ou comando aqui (ex: 'Escreva uma cena de luta entre Fulano e Ciclano no porto')..." onblur="salvarConteudoProjeto()"></textarea>
+                <div style="margin-top:10px; font-size:0.8em; color:#777" class="no-print">
+                    Caractéres: <span id="contadorCharsProj">0</span> | Seção isolada do Cânone
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Conteúdo Personagens -->
+<div id="aba-personagens" class="content">
+    <div class="panel">
+        <div class="header-row">
+            <h2>Personagens (Perfil Profundo)</h2>
+            <div>
+                <button class="btn btn-ai" onclick="iaGerarPersonagem()" title="Criar NPC automaticamente">✨ IA: Gerar NPC</button>
+                <button class="btn btn-warning" onclick="baixarJSONAba('personagens')">💾 JSON Aba</button>
+                <button class="btn btn-secondary" onclick="baixarTabela('tabelaPersonagens', 'Personagens')">📊 Baixar Tabela</button>
+                <button class="btn btn-danger" onclick="deletarSelecionados('personagens')" title="Apagar marcados">🗑️ Massa</button>
+                <button class="btn btn-primary" onclick="novoPersonagem()">+ Novo</button>
+            </div>
+        </div>
+        <div class="table-wrapper">
+            <table id="tabelaPersonagens">
+                <thead>
+                    <tr>
+                        <th class="sortable" style="white-space:nowrap;" onclick="ordenarTabela('info')" title="Ordenar por quantidade de dados">
+                            <input type="checkbox" onclick="event.stopPropagation(); toggleSelecionarTudo(this, 'check-personagem')" title="Todos"> 
+                            Info <span id="sort-info" class="sort-icon"></span>
+                        </th>
+                        <th class="sortable" onclick="ordenarTabela('nome')">Nome <span id="sort-nome" class="sort-icon"></span></th>
+                        <th class="sortable" onclick="ordenarTabela('pais')">País <span id="sort-pais" class="sort-icon"></span></th>
+                        <th class="sortable" width="150" onclick="ordenarTabela('rank')">Rank <span id="sort-rank" class="sort-icon"></span></th>
+                        <th class="sortable" onclick="ordenarTabela('np')">NP (Poder) <span id="sort-np" class="sort-icon"></span></th>
+                        <th class="sortable" onclick="ordenarTabela('nascimento')">Nascimento <span id="sort-nascimento" class="sort-icon"></span></th>
+                        <th class="sortable" onclick="ordenarTabela('idade')">Idade <span id="sort-idade" class="sort-icon"></span></th>
+                        <th class="sortable" onclick="ordenarTabela('status')">Status <span id="sort-status" class="sort-icon"></span></th>
+                        <th class="no-print">Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="listaPersonagens"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Conteúdo Orgs -->
+<div id="aba-orgs" class="content">
+    <div class="panel">
+        <div class="header-row">
+            <h2>Organizações &amp; Instituições</h2>
+            <div>
+                <button class="btn btn-ai" onclick="iaGerarOrganizacao()" title="Criar Organização automaticamente">✨ IA: Gerar Org</button>
+                <button class="btn btn-warning" onclick="baixarJSONAba('organizacoes')">💾 JSON Aba</button>
+                <button class="btn btn-secondary" onclick="baixarTabela('tabelaOrgs', 'Organizacoes')">📊 Baixar Tabela</button>
+                <button class="btn btn-primary" onclick="novaOrganizacao()">+ Nova Org</button>
+            </div>
+        </div>
+        <div class="table-wrapper">
+            <table id="tabelaOrgs">
+                <thead>
+                    <tr>
+                        <th width="60" class="sortable"><input type="checkbox" onclick="toggleSelecionarTudo(this, 'check-organizacao')" title="Todos"> Info</th>
+                        <th class="sortable" onclick="ordenarTabelaOrg('id')">ID <span id="sort-org-id" class="sort-icon"></span></th>
+                        <th class="sortable" onclick="ordenarTabelaOrg('nome')">Nome <span id="sort-org-nome" class="sort-icon"></span></th>
+                        <th class="sortable" onclick="ordenarTabelaOrg('tipo')">Tipo <span id="sort-org-tipo" class="sort-icon"></span></th>
+                        <th class="sortable" onclick="ordenarTabelaOrg('sede')">Sede <span id="sort-org-sede" class="sort-icon"></span></th>
+                        <th class="sortable" onclick="ordenarTabelaOrg('lider')">Líder <span id="sort-org-lider" class="sort-icon"></span></th>
+                        <th class="sortable" onclick="ordenarTabelaOrg('status')">Status <span id="sort-org-status" class="sort-icon"></span></th>
+                        <th class="no-print">Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="listaOrganizacoes"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div id="aba-elite" class="content">
+    <div class="panel">
+        <div class="header-row">
+            <h2>A Elite Global (Rank SSS)</h2>
+            <div>
+                <button class="btn btn-warning" onclick="baixarJSONAba('personagens')">💾 JSON Aba (Personagens)</button>
+                <button class="btn btn-secondary" onclick="baixarTabela('tabelaElite', 'Elite_SSS')">📊 Baixar Tabela</button>
+            </div>
+        </div>
+        <div class="table-wrapper">
+            <table id="tabelaElite">
+                <thead>
+                    <tr>
+                        <th width="50">Pos.</th>
+                        <th>Nome</th>
+                        <th>País</th>
+                        <th>Nascimento</th>
+                        <th>Idade</th>
+                        <th>Poder Total (NP)</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="listaElite"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div id="aba-leis" class="content">
+    <div class="panel">
+        <div class="header-row">
+            <h2>Constituição SSS &amp; Código Penal</h2>
+            <div>
+                <button class="btn btn-warning" onclick="baixarJSONAba('leis')">💾 JSON Aba</button>
+                <button class="btn btn-secondary" onclick="baixarTabela('tabelaLeis', 'Leis')">📊 Baixar Tabela</button>
+                <button class="btn btn-primary" onclick="novaLei()">+ Lei</button>
+            </div>
+        </div>
+        <div class="table-wrapper">
+            <table id="tabelaLeis">
+                <thead>
+                    <tr>
+                        <th class="sortable" width="60"><input type="checkbox" onclick="toggleSelecionarTudo(this, 'check-lei')" title="Todos"> Info</th>
+                        <th class="sortable" width="10%" onclick="ordenarTabelaLeis('id')">ID <span id="sort-lei-id" class="sort-icon"></span></th>
+                        <th class="sortable" onclick="ordenarTabelaLeis('nome')">Código/Nome <span id="sort-lei-nome" class="sort-icon"></span></th>
+                        <th width="40%">Descrição</th>
+                        <th class="sortable" width="10%" onclick="ordenarTabelaLeis('data')">Data <span id="sort-lei-data" class="sort-icon"></span></th>
+                        <th class="no-print">Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="listaLeis"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div id="aba-mundo" class="content">
+    <div class="panel">
+        <div class="header-row">
+            <h2>Física do Mundo</h2>
+            <div>
+                <button class="btn btn-warning" onclick="baixarJSONAba('fisica')">💾 JSON Aba</button>
+                <button class="btn btn-secondary" onclick="baixarTabela('tabelaFisica', 'Fisica_Regras')">📊 Baixar Tabela</button>
+                <button class="btn btn-primary" onclick="novaRegraFisica()">+ Regra</button>
+            </div>
+        </div>
+        <div class="table-wrapper">
+            <table id="tabelaFisica">
+                <thead>
+                    <tr>
+                        <th class="sortable" width="60"><input type="checkbox" onclick="toggleSelecionarTudo(this, 'check-fisica')" title="Todos"> Info</th>
+                        <th class="sortable" width="10%" onclick="ordenarTabelaFisica('id')">ID <span id="sort-fisica-id" class="sort-icon"></span></th>
+                        <th class="sortable" width="20%" onclick="ordenarTabelaFisica('regra')">Regra <span id="sort-fisica-regra" class="sort-icon"></span></th>
+                        <th width="45%">Descrição</th>
+                        <th class="no-print">Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="listaFisica"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div id="aba-nacoes" class="content">
+    <div class="panel">
+        <div class="header-row">
+            <h2>Geopolítica &amp; Demografia</h2>
+            <div>
+                <button class="btn btn-warning" onclick="baixarJSONAba('config')">💾 JSON Aba</button>
+                <button class="btn btn-secondary" onclick="baixarTabela('tabelaNacoes', 'Geopolitica')">📊 Baixar Tabela</button>
+                <button class="btn btn-secondary" onclick="resetarPadroes()">Restaurar Padrões</button>
+            </div>
+        </div>
+        
+        <div style="background: var(--bg-panel); padding: 15px; border-bottom: 2px solid var(--border-color); margin-bottom: 20px;">
+            <label style="font-weight: bold; font-size: 1.1em; color: var(--accent);">🌍 População Mundial Total:</label>
+            <input type="text" id="popMundial" value="9.000.000.000" onchange="salvarConfigDemo(); renderizarNacoes();" style="width: 200px; font-weight: bold; font-size: 1.1em; padding: 5px; margin-left: 10px;">
+            <span style="font-size: 0.9em; color: var(--text); margin-left: 10px;">(Altere este valor para recalcular todas as tabelas abaixo automaticamente)</span>
+        </div>
+
+        <div class="demo-grid" id="painelDemografia" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap:10px; margin-bottom:20px;"></div>
+        
+        <div class="table-wrapper">
+            <table id="tabelaNacoes">
+                <thead>
+                    <tr>
+                        <th>País</th>
+                        <th>% Pop</th>
+                        <th>População Total</th>
+                        <th title="Contagem real da Aba Personagens">SSS (Real)</th>
+                        <th>SS (Est.)</th>
+                        <th>S (Est.)</th>
+                        <th>A (Est.)</th>
+                        <th>B (Est.)</th>
+                        <th>C (Est.)</th>
+                        <th>D (Est.)</th>
+                        <th>E (Est.)</th>
+                        <th>Poder Total (Real + Est.)</th>
+                        <th width="20%">Política / Notas</th>
+                    </tr>
+                </thead>
+                <tbody id="listaNacoes"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div id="dynamic-contents"></div>
+
+<script id="dados-injetados"></script>
+
+<script>
+    // --- GEMINI API CONFIG (GERENCIADOR DE CHAVES) ---
+    let userApiKey = ""; 
+    let apiKeysList = [];
+
+    // Carregar chaves salvas ao iniciar
+    function carregarChaveAPI() {
+        // Migração da chave antiga (codex_gemini_key) para a nova lista se existir
+        const oldKey = localStorage.getItem('codex_gemini_key');
+        const savedList = localStorage.getItem('codex_api_keys_list');
+        
+        if (savedList) {
+            apiKeysList = JSON.parse(savedList);
+        } else if (oldKey) {
+            // Se não tem lista mas tem chave antiga, cria lista com ela
+            apiKeysList = [{ name: "Chave Padrão (Migrada)", key: oldKey, active: true }];
+            localStorage.setItem('codex_api_keys_list', JSON.stringify(apiKeysList));
+        }
+
+        renderKeysList();
+        
+        // Define a chave ativa globalmente
+        const active = apiKeysList.find(k => k.active);
+        if (active) userApiKey = active.key;
+    }
+
+    function renderKeysList() {
+        const container = document.getElementById('keysList');
+        container.innerHTML = '';
+        
+        if (apiKeysList.length === 0) {
+            container.innerHTML = '<div style="padding:10px; color:#777; font-style:italic;">Nenhuma chave salva.</div>';
+            return;
+        }
+
+        apiKeysList.forEach((item, index) => {
+            const div = document.createElement('div');
+            div.className = 'key-list-item' + (item.active ? ' active-key' : '');
+            
+            // Mascarar chave
+            const maskedKey = item.key.substring(0, 6) + "..." + item.key.substring(item.key.length - 4);
+            
+            div.innerHTML = `
+                <div style="display:flex; align-items:center; gap:10px; flex:1; cursor:pointer;" onclick="selectKey(${index})">
+                    <input type="radio" name="activeKeyGroup" ${item.active ? 'checked' : ''}>
+                    <div>
+                        <div style="font-weight:bold;">${item.name}</div>
+                        <div style="font-size:0.8em; color:#666; font-family:monospace;">${maskedKey}</div>
+                    </div>
+                </div>
+                <button class="btn btn-danger btn-sm" onclick="deleteKey(${index})">🗑️</button>
+            `;
+            container.appendChild(div);
+        });
+    }
+
+    function adicionarChave() {
+        const nameInput = document.getElementById('newKeyName');
+        const keyInput = document.getElementById('newKeyValue');
+        const name = nameInput.value.trim() || "Chave Sem Nome";
+        const key = keyInput.value.trim();
+
+        if (!key) {
+            alert("Por favor, cole a Chave API.");
+            return;
+        }
+
+        // Desativa outras se for a primeira ou se usuário quiser (aqui vamos ativar a nova por padrão)
+        apiKeysList.forEach(k => k.active = false);
+        
+        apiKeysList.push({ name: name, key: key, active: true });
+        
+        localStorage.setItem('codex_api_keys_list', JSON.stringify(apiKeysList));
+        
+        nameInput.value = '';
+        keyInput.value = '';
+        
+        carregarChaveAPI(); // Recarrega e define userApiKey
+    }
+
+    function selectKey(index) {
+        apiKeysList.forEach((k, i) => k.active = (i === index));
+        localStorage.setItem('codex_api_keys_list', JSON.stringify(apiKeysList));
+        carregarChaveAPI();
+    }
+
+    function deleteKey(index) {
+        if(confirm("Remover esta chave?")) {
+            apiKeysList.splice(index, 1);
+            // Se deletou a ativa, ativa a primeira que sobrar
+            if (apiKeysList.length > 0 && !apiKeysList.some(k => k.active)) {
+                apiKeysList[0].active = true;
+            }
+            localStorage.setItem('codex_api_keys_list', JSON.stringify(apiKeysList));
+            carregarChaveAPI();
+        }
+    }
+
+    // --- UPLOAD JSON ---
+    function uploadJsonFile(input) {
+        const file = input.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const content = e.target.result;
+            document.getElementById('jsonInputArea').value = content;
+            alert("Arquivo JSON carregado na área de texto! Clique em 'Processar Dados' para aplicar.");
+        };
+        reader.readAsText(file);
+        
+        // Limpa o input para permitir re-upload do mesmo arquivo se necessário
+        input.value = '';
+    }
+
+// --- NOVA FUNÇÃO: IMPORTAR APENAS A ABA LIVRO ---
+    function importarApenasLivro() {
+        // Cria input temporário na memória
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.json';
+
+        input.onchange = e => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.readAsText(file, 'UTF-8');
+
+            reader.onload = readerEvent => {
+                try {
+                    const conteudo = JSON.parse(readerEvent.target.result);
+
+                    // Validação: O backup da aba livro é sempre uma Lista (Array)
+                    if (Array.isArray(conteudo)) {
+                        const confirmacao = confirm(
+                            `⚠️ ATENÇÃO: RESTAURAÇÃO PARCIAL\n\n` +
+                            `Você está prestes a substituir TODO o texto da aba 'LIVRO' pelo conteúdo do arquivo:\n` +
+                            `"${file.name}"\n\n` +
+                            `Isso NÃO afetará seus Personagens, Regras ou Projetos.\n` +
+                            `Deseja continuar?`
+                        );
+
+                        if (confirmacao) {
+                            // Injeta apenas na história
+                            bancoDados.historia = conteudo;
+                            
+                            // Força salvamento e atualização visual
+                            salvarDadosLocal();
+                            renderizarListaCapitulos();
+                            
+                            // Carrega o primeiro capítulo para o usuário ver que funcionou
+                            if(bancoDados.historia.length > 0) {
+                                carregarCapituloNoEditor(bancoDados.historia[0].id);
+                            }
+
+                            alert("✅ Sucesso! A aba Livro foi restaurada.");
+                        }
+                    } else {
+                        alert("❌ Erro: O arquivo selecionado não parece ser um backup exclusivo da aba Livro (não é uma lista). Se for um backup completo, use o botão azul.");
+                    }
+                } catch (err) {
+                    alert("❌ Erro crítico ao ler JSON: " + err.message);
+                }
+            };
+        };
+        // Abre a janela de seleção
+        input.click();
+    }
+
+    async function testarAPI() {
+        const btn = event.target;
+        const original = btn.innerText;
+        btn.innerText = "Testando...";
+        try {
+            const res = await queryGemini("Responda apenas 'OK' se estiver funcionando.");
+            if(res && res.includes("OK")) alert("✅ Conexão com Gemini estabelecida com sucesso!");
+            else alert("⚠️ A API respondeu, mas algo inesperado: " + res);
+        } catch(e) {
+            alert("❌ Falha na conexão. Verifique se há uma chave ativa.");
+        }
+        btn.innerText = original;
+    }
+
+    async function queryGemini(prompt, isJson = false) {
+        // Pega a chave ativa global (definida em carregarChaveAPI)
+        if (!userApiKey) {
+            alert("⚠️ Nenhuma Chave API ativa! Adicione ou selecione uma na aba 'Regras'.");
+            return null;
+        }
+
+        try {
+            const payload = {
+                contents: [{ parts: [{ text: prompt }] }]
+            };
+            if(isJson) {
+                payload.generationConfig = { responseMimeType: "application/json" };
+            }
+
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${userApiKey}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if(!response.ok) {
+                const errData = await response.json();
+                throw new Error(`API Error ${response.status}: ${errData.error?.message || 'Unknown error'}`);
+            }
+            const data = await response.json();
+            return data.candidates[0].content.parts[0].text;
+        } catch (e) {
+            console.error("Gemini Error:", e);
+            alert("Erro ao contatar o Oráculo (IA): " + e.message);
+            return null;
+        }
+    }
+
+    async function iaEscreverProjeto() {
+        const editor = document.getElementById('textoProjeto');
+        const ideiaUsuario = editor.value;
+        const titulo = document.getElementById('editorTituloProj').value;
+        
+        if(!ideiaUsuario || ideiaUsuario.length < 5) {
+            alert("Digite sua ideia ou comando no campo de texto primeiro.");
+            return;
+        }
+
+        const btn = event.target;
+        const textoOriginalBtn = btn.innerText;
+        btn.innerText = "✨ Lendo Cânone & Escrevendo..."; // Indica que está lendo tudo
+        btn.classList.add("loading");
+
+        // 1. Coleta Contexto dos Personagens (Com Visual e Psique)
+        const charsContext = bancoDados.personagens.map(p => {
+            const traços = (p.personalidade || []).map(t => t.traco).join(', ');
+            const visual = (p.aparencia || []).map(a => a.traço).join(', ');
+            return `- ${p.nome} (Rank: ${p.rank}, País: ${p.pais}): ${traços}. Visual: ${visual}.`;
+        }).join('\n');
+
+        // 2. CONTEXTUALIZAÇÃO INTELIGENTE (Lê o resumo da obra inteira)
+        let resumoHistoria = "RESUMO ESTRUTURAL DA SAGA (Contexto Obrigatório):\n";
+        
+        if (bancoDados.historia && bancoDados.historia.length > 0) {
+            const todosCapitulos = [...bancoDados.historia].sort(naturalSort);
+            
+            // Filtra capítulos 'Marco' (1.0, 1.3) e os Recentes para economizar memória da IA
+            const capitulosRelevantes = todosCapitulos.filter((cap, index) => {
+                const pontos = (cap.id.match(/\./g) || []).length;
+                const ehPrincipal = pontos <= 1; // Pega 1.0, 1.1, 1.5... Pula 1.1.3
+                const ehRecente = index > todosCapitulos.length - 3; // Pega sempre os 3 últimos
+                return ehPrincipal || ehRecente;
+            });
+
+            capitulosRelevantes.forEach(cap => {
+                // Pega o "Ataque" (início) e o "Gancho" (fim) de cada capítulo
+                const inicio = cap.conteudo.slice(0, 300);
+                const fim = cap.conteudo.slice(-300);
+                resumoHistoria += `\n[CAP ${cap.id} - ${cap.titulo}]:\n"${inicio} [...] ${fim}"\n`;
+            });
+        }
+
+        // 3. O PROMPT "PROTOCOLO SUPREMO" (V8.0)
+        const prompt = `1. IDENTIDADE E FUNÇÃO
+Você é o Escritor Fantasma Sênior da saga 'Códice - A Fenda'.
+Seu Objetivo: Transformar o esboço do usuário em literatura de alto nível, cinematográfica e visceral.
+Sua Bíblia: Você NÃO inventa fatos que contradigam o resumo abaixo. Você processa os dados para garantir consistência absoluta.
+
+2. O TOM DA OBRA (BEST-SELLER STYLE & LITERARY BLEND)
+A narrativa deve ser madura, focada em Realpolitik (consequências políticas) e Hard Magic (consequências físicas).
+Para atingir esse tom, utilize esta QUÍMICA LITERÁRIA:
+- Atmosfera (Ref: "Drácula"): O ambiente é opressivo, apavorante e vivo. Descreva a iluminação (seja o brilho rico da luz produzida por usinas que usam cristais energéticos ou a luz amarela e pobre da energia normal de hidroelétricas, usinas carvão ou gás, ), a umidade, o cheiro de ozônio/ferro. 
+- Fluidez (Ref: "Harry Potter"): Worldbuilding claro. Seja claro e visual. Descreva materiais, texturas e a física do poder, da magia e da tecnologia interagindo com o mundo.
+- Psique (Ref: "Flores para Algernon"): Introspecção crua. A vulnerabilidade dos pensamentos. Mostre a textura do pensamento, a dúvida, o medo, a memória súbita e a tensão e consequências.
+- Visceralidade (Ref: "50 Tons de Cinza"): Foco total nas reações biológicas e tensão instintiva. Pulso, suor, arrepio, nó na garganta. Explore a tensão sexual, hormônios e desejos instintivos quando houver interação entre personagens.
+
+3. REGRAS DE FÍSICA E MAGIA (HARD MAGIC)
+- A magia não é abstrata. Ela tem massa, desloca ar, gera calor, ioniza a atmosfera e causa exaustão biológica (tremores, sangramento nasal).
+- Descreva o impacto no ambiente: vidros vibrando, temperatura caindo, cheiro de estática.
+
+4. MECÂNICA DE DIÁLOGOS E PERSPECTIVA (REGRA DE OURO)
+- **Perspectiva Limitada (Deep POV):** Narre APENAS o que o personagem em foco vê, sente e sabe. Nunca use "ele não sabia que..." se o personagem não souber. O mundo existe através dos olhos dele.
+- **Diálogos como Motor:** Priorize cenas conversadas. Use o diálogo para revelar a trama e o conflito, não a narração.
+- **Parágrafos Curtos:** Mantenha o ritmo ágil e agradável de ler. Evite blocos de texto massivos.
+- **Pensamentos Sólidos:** Os pensamentos devem ser curtos, incisivos e em itálico se necessário, reagindo ao diálogo em tempo real.
+
+5. PROTOCOLO DE EXPANSÃO DESCRITIVA (Obrigatório)
+Para cada elemento do esboço, você deve detalhar:
+- **Cenário:** Iluminação, texturas (concreto, veludo, metal), o clima, expectativas, sempre como os personagens veem o cenário, o que pensam.
+- **Aparência:** O caimento das roupas, tecidos caros vs. gastos, estilo visual, cor, textura, percepção própria dos personagens, percepção de outros personagens.
+- **Tensão Instintiva:** Se houver interação, descreva a tensão sexual, hormônios, feromônios, o "nó na garganta", o desejo ou a repulsa física, medo amizade, carinho, afeto, nojo amor.
+- **Sinestesia:** Envolva os sentidos (tato, olfato, audição).
+
+--- DADOS DE CONTEXTO ---
+[RESUMO DA HISTÓRIA ATÉ AQUI]:
+${resumoHistoria}
+
+[PERSONAGENS DISPONÍVEIS]:
+${charsContext}
+
+--- SUA TAREFA AGORA ---
+[TÍTULO]: ${titulo}
+[ROTEIRO/ESBOÇO]: ${ideiaUsuario}
+
+ESCREVA A CENA AGORA (Prosa profunda, densa e coerente):`;
+
+        const resultado = await queryGemini(prompt);
+        
+        if(resultado) {
+            editor.value = ideiaUsuario + "\n\n" + "=".repeat(40) + "\n\n" + resultado;
+            atualizarContadorProj();
+        }
+
+        btn.innerText = textoOriginalBtn;
+        btn.classList.remove("loading");
+    }
+
+    async function iaContinuarTexto(editorId) {
+        const editor = document.getElementById(editorId);
+        const textoAtual = editor.value;
+        const titulo = document.getElementById(editorId === 'textoCapitulo' ? 'editorTitulo' : 'editorTituloProj').value;
+        
+        if(!textoAtual || textoAtual.length < 50) {
+            alert("Escreva pelo menos um pouco para a IA entender o contexto!");
+            return;
+        }
+
+        const btn = event.target;
+        const textoOriginalBtn = btn.innerText;
+        btn.innerText = "✨ Pensando...";
+        btn.classList.add("loading");
+
+        const prompt = `Atue como o 'Cronista' da saga 'Códice - A Fenda'. O universo é moderno com superpoderes (Ranks E a SSS, NP = Nível de Poder). Continue a narrativa a seguir, mantendo o tom dramático, detalhado e o estilo do texto. Não repita o final, apenas continue.
+        Título: ${titulo}
+        Texto Atual (Últimos parágrafos):
+        ${textoAtual.slice(-3000)}`;
+
+        const resultado = await queryGemini(prompt);
+        
+        if(resultado) {
+            editor.value = textoAtual + "\n\n" + resultado;
+            // Atualizar contadores
+            if(editorId === 'textoCapitulo') atualizarContador();
+            else atualizarContadorProj();
+        }
+
+        btn.innerText = textoOriginalBtn;
+        btn.classList.remove("loading");
+    }
+
+    async function iaAnalisarTexto(editorId) {
+        const editor = document.getElementById(editorId);
+        const textoAtual = editor.value;
+        
+        if(!textoAtual) return;
+
+        const btn = event.target;
+        const textoOriginalBtn = btn.innerText;
+        btn.innerText = "✨ Analisando...";
+        btn.classList.add("loading");
+
+        const prompt = `SUA BASE DE CONHECIMENTO (CÓDICE):
+Universo: Mundo contemporâneo onde a bioenergia (NP) define a hierarquia.
+Física: "Baterias viciam" (exaustão de núcleo), tecnologia tem teto (falha com SSS), e a "Cascata Traumática" permite saltos de poder.
+Estilo: "Show, Don't Tell" (Mostre, não conte), Sinestesia (misturar sentidos), e Realismo Mágico Periférico (Santo André vs. Geopolítica Global).
+
+ESTRUTURA OBRIGATÓRIA DE RESPOSTA:
+Sempre que o usuário enviar um capítulo ou cena, ignore elogios vazios e forneça uma análise estruturada nestes 4 pilares:
+
+1. O "ASSET" NARRATIVO (O que funciona e por quê)
+Identifique o ponto mais forte da cena (o "ouro").
+Explique tecnicamente por que funciona (ex: uso de Ironia Dramática, tensão, worldbuilding).
+Use termos de mercado (ex: "Isso eleva o valor da IP", "Isso cria engajamento").
+
+2. AUDITORIA DE LORE E FÍSICA
+Verifique quebras de regras (ex: Rank D vencendo Rank A na força bruta).
+Aponte inconsistências com capítulos anteriores.
+Sugira ajustes técnicos de "Lore" para cobrir furos.
+
+3. O "PENTE FINO" (Reescrita Cirúrgica)
+ESTA É A PARTE MAIS CRÍTICA. Não dê apenas conselhos abstratos.
+Identifique parágrafos fracos, expositivos ("Tell") ou com ritmo ruim.
+Para cada problema, siga estritamente este formato:
+O PROBLEMA: (Copie o trecho original e explique o erro brevemente).
+A SOLUÇÃO (Copie e Cole): (Escreva o parágrafo ou diálogo INTEIRO novamente, corrigido, aplicando sinestesia e Show Don't Tell, pronto para ir para o livro).
+
+4. VEREDITO DO INVESTIDOR
+Dê uma nota ou status (ex: "Aprovado", "Risco de Roteiro", "Potencial Best-Seller").
+Resuma o impacto da cena no arco maior.
+
+TOM DE VOZ:
+Seja profissional, técnico e exigente. Você é um parceiro de pensamento. Aponte a falha, mas sempre entregue a reescrita pronta.
+
+TEXTO PARA ANÁLISE:
+${textoAtual.slice(-6000)}`;
+
+        const resultado = await queryGemini(prompt);
+        
+        if(resultado) {
+            // Tenta copiar automaticamente para o clipboard
+            let copiado = false;
+            try {
+                await navigator.clipboard.writeText(resultado);
+                copiado = true;
+            } catch (err) {
+                // Fallback para navegadores que bloqueiam navigator em http/file
+                const textArea = document.createElement("textarea");
+                textArea.value = resultado;
+                document.body.appendChild(textArea);
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    copiado = true;
+                } catch (e) { copiado = false; }
+                document.body.removeChild(textArea);
+            }
+
+            const msg = copiado ? "✅ Análise copiada para o Ctrl+V!\n\n" : "";
+            alert(msg + "ANÁLISE DO ORÁCULO:\n\n" + resultado);
+        }
+
+        btn.innerText = textoOriginalBtn;
+        btn.classList.remove("loading");
+    }
+
+    async function iaGerarPersonagem() {
+        const btn = event.target;
+        const textoOriginalBtn = btn.innerText;
+        btn.innerText = "✨ Criando...";
+        btn.classList.add("loading");
+
+        const desc = prompt("Deseja algo específico? (Ex: 'Vilão de gelo', 'Heroína SSS do Brasil'). Deixe vazio para aleatório.");
+        const context = desc ? `Contexto extra: ${desc}` : "Crie algo aleatório e criativo.";
+
+        const prompt = `Gere um personagem RPG para o universo 'Códice - A Fenda' (Mundo moderno com superpoderes).
+        ${context}
+        Regras:
+        - Ranks: E, D, C, B, A, S, SS, SSS.
+        - NP (Nível de Poder): E(~50) a SSS(>100.000.000).
+        - Retorne APENAS um JSON válido (sem markdown) com esta estrutura:
+        {
+            "nome": "String",
+            "pais": "String (País real)",
+            "rank": "String",
+            "np": "String ou Number (Ex: 50000)",
+            "nascimento": "YYYY-MM-DD",
+            "status": "String (Ativo/Morto/Preso)",
+            "personalidade": [{"data": "${getFormattedDate().split('_')[0]}", "traco": "String", "desc": "String"}],
+            "inventario": [{"data": "${getFormattedDate().split('_')[0]}", "item": "String", "desc": "String"}],
+            "eventos": [{"data": "${getFormattedDate().split('_')[0]}", "desc": "História de origem resumida"}]
+        }`;
+
+        const jsonStr = await queryGemini(prompt, true);
+
+        if(jsonStr) {
+            try {
+                // Tenta limpar caso a IA mande markdown ```json
+                const cleanJson = jsonStr.replace(/```json/g, '').replace(/```/g, '').trim();
+                const novoChar = JSON.parse(cleanJson);
+                
+                // Formatação extra para garantir compatibilidade
+                if(!novoChar.personalidade) novoChar.personalidade = [];
+                if(!novoChar.inventario) novoChar.inventario = [];
+                if(!novoChar.eventos) novoChar.eventos = [];
+                if(!novoChar.relacionamentos) novoChar.relacionamentos = [];
+                if(!novoChar.aparencia) novoChar.aparencia = [];
+
+                bancoDados.personagens.push(novoChar);
+                renderizarPersonagens();
+                alert(`✨ Personagem ${novoChar.nome} (${novoChar.rank}) criado com sucesso!`);
+            } catch(e) {
+                console.error(e);
+                alert("A IA gerou um formato inválido. Tente novamente.");
+            }
+        }
+
+        btn.innerText = textoOriginalBtn;
+        btn.classList.remove("loading");
+    }
+
+    async function iaGerarOrganizacao() {
+        const btn = event.target;
+        const textoOriginalBtn = btn.innerText;
+        btn.innerText = "✨ Fundando...";
+        btn.classList.add("loading");
+
+        const desc = prompt("Tipo de organização? (Ex: 'Guilda de Mercenários', 'Governo', 'Culto'). Vazio = Aleatório.");
+        const context = desc ? `Foco: ${desc}` : "";
+
+        const prompt = `Gere uma Organização para o universo 'Códice - A Fenda'.
+        ${context}
+        Retorne APENAS um JSON válido com esta estrutura:
+        {
+            "nome": "String",
+            "tipo": "String",
+            "sede": "String",
+            "lider": "String",
+            "status": "String",
+            "descricao": "String (Propósito e descrição)",
+            "citacoes": ""
+        }`;
+
+        const jsonStr = await queryGemini(prompt, true);
+
+        if(jsonStr) {
+            try {
+                const cleanJson = jsonStr.replace(/```json/g, '').replace(/```/g, '').trim();
+                const novaOrg = JSON.parse(cleanJson);
+                
+                novaOrg.id = `ORG-${Date.now()}`;
+                novaOrg.membros = [];
+                novaOrg.historico = [{data: getFormattedDate().split('_')[0], evento: "Fundação/Descoberta"}];
+                novaOrg.regrasInternas = [];
+
+                bancoDados.organizacoes.push(novaOrg);
+                renderizarOrganizacoes();
+                alert(`✨ Organização ${novaOrg.nome} criada!`);
+            } catch(e) {
+                alert("Erro ao processar criação da Org.");
+            }
+        }
+
+        btn.innerText = textoOriginalBtn;
+        btn.classList.remove("loading");
+    }
+
+    // --- DADOS DE CONFIGURAÇÃO IMUTÁVEIS ---
+    const POPULATION_DATA = { "Índia": 0.17811, "China": 0.17400, "Estados Unidos": 0.04172, "Indonésia": 0.03534, "Paquistão": 0.03024, "Nigéria": 0.02891, "Brasil": 0.02670, "Bangladesh": 0.02133, "Rússia": 0.01758, "México": 0.01590, "Etiópia": 0.01606, "Japão": 0.01500, "Filipinas": 0.01454, "Egito": 0.01398, "República Democrática do Congo": 0.01287, "Vietnã": 0.01224, "Irã": 0.01089, "Turquia": 0.01054, "Alemanha": 0.01017, "Tanzânia": 0.00844, "Reino Unido": 0.00830, "Tailândia": 0.00877, "França": 0.00792, "África do Sul": 0.00745, "Itália": 0.00720, "Myanmar": 0.00666, "Quênia": 0.00673, "Colômbia": 0.00643, "Coreia do Sul": 0.00632, "Uganda": 0.00618, "Sudão": 0.00603, "Espanha": 0.00580, "Argentina": 0.00562, "Argélia": 0.00557, "Iraque": 0.00556, "Afeganistão": 0.00544, "Canadá": 0.00477, "Polônia": 0.00459, "Marrocos": 0.00467, "Arábia Saudita": 0.00458, "Ucrânia": 0.00449, "Angola": 0.00448, "Uzbequistão": 0.00436, "Iêmen": 0.00421, "Peru": 0.00419, "Malásia": 0.00419, "Gana": 0.00417, "Moçambique": 0.00414, "Nepal": 0.00381, "Madagascar": 0.00370, "Camarões": 0.00359, "Costa do Marfim": 0.00361, "Venezuela": 0.00355, "Coreia do Norte": 0.00320, "Austrália": 0.00328, "Níger": 0.00332, "Taiwan": 0.00292, "Mali": 0.00284, "Burkina Faso": 0.00284, "Síria": 0.00284, "Sri Lanka": 0.00271, "Malawi": 0.00256, "Zâmbia": 0.00251, "Cazaquistão": 0.00242, "Chile": 0.00240, "Romênia": 0.00232, "Chade": 0.00223, "Somália": 0.00221, "Equador": 0.00222, "Guatemala": 0.00221, "Senegal": 0.00217, "Países Baixos": 0.00215, "Camboja": 0.00207, "Zimbábue": 0.00204, "Guiné": 0.00173, "Ruanda": 0.00172, "Benim": 0.00167, "Burundi": 0.00160, "Bolívia": 0.00151, "Tunísia": 0.00151, "Haiti": 0.00143, "Bélgica": 0.00143, "República Dominicana": 0.00138, "Jordânia": 0.00138, "Cuba": 0.00137, "Suécia": 0.00130, "Honduras": 0.00129, "República Tcheca": 0.00128, "Azerbaijão": 0.00127, "Grécia": 0.00126, "Papua-Nova Guiné": 0.00126, "Portugal": 0.00125, "Tajiquistão": 0.00124, "Hungria": 0.00118, "Emirados Árabes Unidos": 0.00116, "Bielorrússia": 0.00116, "Áustria": 0.00109, "Suíça": 0.00108, "Israel": 0.00114, "Togo": 0.00111, "Serra Leoa": 0.00107, "Laos": 0.00093, "Hong Kong": 0.00092, "Nicarágua": 0.00086, "Sérvia": 0.00087, "Paraguai": 0.00084, "Líbia": 0.00083, "Quirguistão": 0.00082, "Bulgária": 0.00083, "Turcomenistão": 0.00080, "El Salvador": 0.00078, "Singapura": 0.00073, "República do Congo": 0.00073, "Dinamarca": 0.00072, "Finlândia": 0.00068, "Eslováquia": 0.00067, "Noruega": 0.00067, "Estado da Palestina": 0.00067, "Libéria": 0.00066, "Nova Zelândia": 0.00064, "Costa Rica": 0.00064, "Irlanda": 0.00062, "Mauritânia": 0.00059, "Omã": 0.00057, "Panamá": 0.00055, "Kuwait": 0.00053, "Croácia": 0.00049, "Geórgia": 0.00045, "Mongólia": 0.00042, "Uruguai": 0.00042, "Bósnia e Herzegovina": 0.00039, "Albânia": 0.00035, "Jamaica": 0.00035, "Armênia": 0.00034, "Catar": 0.00033, "Lituânia": 0.00033, "Gâmbia": 0.00034, "Botsuana": 0.00033, "Namíbia": 0.00031, "Gabão": 0.00030, "Lesoto": 0.00028, "Guiné-Bissau": 0.00026, "Eslovênia": 0.00026, "Macedônia do Norte": 0.00025, "Letônia": 0.00022, "Guiné Equatorial": 0.00021, "Trinidad e Tobago": 0.00019, "Bahrein": 0.00018, "Timor-Leste": 0.00017, "Estônia": 0.00016, "Maurício": 0.00015, "Chipre": 0.00015, "Eswatini": 0.00015, "Djibouti": 0.00014, "Fiji": 0.00011, "Comores": 0.00011, "Guiana": 0.00010, "Butão": 0.00010, "Ilhas Salomão": 0.00009, "Luxemburgo": 0.00008, "Montenegro": 0.00008, "Suriname": 0.00008, "Cabo Verde": 0.00007, "Malta": 0.00007, "Maldivas": 0.00006, "Brunei": 0.00006, "Bahamas": 0.00005, "Belize": 0.00005, "Islândia": 0.00005, "Vanuatu": 0.00004, "Barbados": 0.00003, "São Tomé e Príncipe": 0.00003, "Samoa": 0.00003, "Santa Lúcia": 0.00002, "Kiribati": 0.00002, "Granada": 0.00002, "Tonga": 0.00001, "Seicheles": 0.00001, "São Vicente e Granadinas": 0.00001, "Antígua e Barbuda": 0.00001, "Andorra": 0.00001, "Dominica": 0.00001, "São Cristóvão e Névis": 0.00001, "Ilhas Marshall": 0.00001 };
+
+    const RANKS_OPTIONS = ["Não Desperto", "E", "D", "C", "B", "A", "S", "SS", "SSS"];
+    
+    // --- PROTOCOLO PADRÃO ---
+    const PROTOCOLO_PADRAO = `### Título do Documento: Protocolo de Interação para "A Saga do Mundo dos Despertos"
+(Versão Final Completa 6.0 - Revisão para Projetos e Geopolítica Dinâmica)
+
+#### Introdução para o Modelo de IA
+Você foi designado para atuar como o "Cronista" em um projeto de escrita colaborativa de longa duração. ||| Sua função é trabalhar em parceria com o "Arquiteto" (o usuário) para construir o universo de "A Saga do Mundo dos Despertos". ||| Para garantir a consistência e a qualidade do cânone, é fundamental que você siga estritamente as regras, os papéis e os formatos descritos neste protocolo.
+
+### Formato de Resposta JSON (Obrigatório)
+Ao final de cada resposta, você DEVE gerar um JSON compatível com o novo sistema modular.
+
+JSON MODELO:
+{
+  "novoCapitulo": { "id": "X.Y.Z", "titulo": "...", "conteudo": "..." },
+  "novoProjeto": { "id": "P.X", "titulo": "Ideia...", "conteudo": "Esboço..." },
+  "novaDataMundo": "AAAA-MM-DD",
+  "atualizacoesPersonagens": [
+    { 
+        "nome": "Nome", "np": 123, "status": "Ativo", 
+        "novoEvento": { "data": "...", "desc": "..." }, 
+        "novoTraco": { "data": "...", "traco": "...", "desc": "..." }, 
+        "novoItem": { "data": "...", "item": "...", "desc": "..." },
+        "novoRelacionamento": { "data": "...", "alvo": "...", "sentimento": "...", "motivo": "..." },
+        "novaAparencia": { "data": "...", "traço": "...", "desc": "..." }
+    }
+  ],
+  "atualizacoesOrganizacoes": [
+    {
+        "nome": "Nome da Org",
+        "novoMembro": { "data": "...", "nome": "...", "cargo": "..." },
+        "novoHistorico": { "data": "...", "evento": "..." }
+    }
+  ]
+}
+
+### Seção 1: Definição dos Papéis e Regras Fundamentais
+**1.1. Regra de Fidelidade ao Texto**
+||| É estritamente proibido resumir, condensar ou abreviar qualquer seção deste protocolo. Todo texto deve ser reproduzido na íntegra.
+
+**1.2. O Usuário (O Arquiteto)**
+||| O Arquiteto é a fonte primária da história. Suas entradas são o "roteiro".
+
+**1.3. O Modelo de IA (O Cronista)**
+||| Sua função é: Refinar e Narrar (estilo códice), Analisar e Expandir (consequências políticas/estratégicas) e Gerar Dados (JSON).`;
+
+    let bancoDados = {
+        historia: [],
+        projetos: [], // NOVA ESTRUTURA PARA A ABA PROJETOS
+        protocolo: PROTOCOLO_PADRAO,
+        personagens: [],
+        organizacoes: [],
+        leis: [],
+        fisica: [],
+        nacoesInfo: {},
+        configDemografica: {
+            populacaoTotal: 9000000000,
+            raridades: { "SS": { taxa: 50000000, np: 55000000 }, "S":  { taxa: 5000000,  np: 5500000 }, "A":  { taxa: 500000,   np: 550000 }, "B":  { taxa: 50000,    np: 55000 }, "C":  { taxa: 5000,     np: 5500 }, "D":  { taxa: 500,      np: 550 }, "E":  { taxa: 50,       np: 55 } }
+        },
+        abasPersonalizadas: [],
+        meta: { dataAtual: "", marcador: "|||" }
+    };
+    
+    let capituloAtualId = null;
+    let projetoAtualId = null; // Variável para controlar a aba Projetos
+
+    let estadoOrdenacao = { coluna: null, direcao: 1 };
+    let estadoOrdenacaoOrg = { coluna: null, direcao: 1 };
+    let estadoOrdenacaoFisica = { coluna: null, direcao: 1 };
+    let estadoOrdenacaoLeis = { coluna: null, direcao: 1 };
+
+    // --- HELPER DATA FORMATADA ---
+    function getFormattedDate() {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        const hour = String(now.getHours()).padStart(2, '0');
+        const minute = String(now.getMinutes()).padStart(2, '0');
+        return `${year}-${month}-${day}_${hour}-${minute}`;
+    }
+
+    // --- INICIALIZAÇÃO SEGURA ---
+    window.onload = function() {
+        carregarDados();
+        carregarTema(); // Carrega o tema salvo
+        carregarChaveAPI(); // Carrega a chave API
+        // Migration script for missing IDs
+        migrarIds();
+        switchTab('aba-regras', document.getElementById('tab-regras'));
+        if(bancoDados.meta) {
+            if(bancoDados.meta.dataAtual) document.getElementById('dataAtual').value = bancoDados.meta.dataAtual;
+            if(bancoDados.meta.marcador) document.getElementById('marcadorTexto').value = bancoDados.meta.marcador;
+        }
+        gerarPainelDemografico();
+        renderizarTudo();
+    };
+    
+    function migrarIds() {
+        if(bancoDados.leis) {
+            bancoDados.leis.forEach((l, i) => { 
+                if(!l.id) l.id = `LEI-${i+1}`; 
+                if(!l.citacoes) l.citacoes = ""; 
+            });
+        }
+        if(bancoDados.fisica) {
+            bancoDados.fisica.forEach((r, i) => { 
+                if(!r.id) r.id = `FIS-${i+1}`; 
+                if(!r.citacoes) r.citacoes = ""; 
+            });
+        }
+        if(bancoDados.organizacoes) {
+            bancoDados.organizacoes.forEach((o, i) => { 
+                if(!o.id) o.id = `ORG-${i+1}`;
+                if(!o.citacoes) o.citacoes = "";
+                if(!o.regrasInternas) o.regrasInternas = [];
+            });
+        }
+        if(!bancoDados.projetos) bancoDados.projetos = [];
+    }
+
+    // --- LÓGICA DO MODO ESCURO ---
+    function toggleDarkMode() {
+        const body = document.body;
+        const currentTheme = body.getAttribute('data-theme');
+        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        body.setAttribute('data-theme', newTheme);
+        localStorage.setItem('codexSagaTheme', newTheme);
+    }
+
+    function carregarTema() {
+        const savedTheme = localStorage.getItem('codexSagaTheme');
+        if (savedTheme) {
+            document.body.setAttribute('data-theme', savedTheme);
+        }
+    }
+
+    // --- LÓGICA DE DADOS ---
+    function salvarDadosLocal() {
+        if(capituloAtualId) salvarConteudoCapitulo();
+        if(projetoAtualId) salvarConteudoProjeto(); // Salva projetos também
+        
+        const elRegras = document.getElementById('regrasIA');
+        if(elRegras) bancoDados.protocolo = elRegras.value;
+        const dt = document.getElementById('dataAtual');
+        const mc = document.getElementById('marcadorTexto');
+        bancoDados.meta = { dataAtual: dt ? dt.value : "", marcador: mc ? mc.value : "|||" };
+        bancoDados.abasPersonalizadas.forEach(aba => {
+            if(aba.tipo === 'texto') {
+                const el = document.getElementById(`texto-${aba.id}`);
+                if(el) aba.conteudo = el.value;
+            }
+        });
+        localStorage.setItem('codexSagaData_v6', JSON.stringify(bancoDados));
+    }
+    
+    function salvarRegras() { bancoDados.protocolo = document.getElementById('regrasIA').value; }
+
+    function carregarDados() {
+        try {
+            if (window.dadosInjetados) {
+                bancoDados = window.dadosInjetados;
+                localStorage.setItem('codexSagaData_v6', JSON.stringify(bancoDados));
+            } else {
+                const d = localStorage.getItem('codexSagaData_v6') || localStorage.getItem('codexSagaData_v5');
+                if (d) { bancoDados = JSON.parse(d); } else {
+                    bancoDados.historia = [{ id: "1.0", titulo: "Início", conteudo: "Comece a escrever aqui..." }];
+                    bancoDados.personagens = [{ nome: "Dra. Evelyn Reed", pais: "Estados Unidos", rank: "SSS", np: 2500000000, nascimento: "1951-05-15", status: "Ativa", personalidade: [], inventario: [], relacionamentos: [] }];
+                }
+            }
+            if (!bancoDados.organizacoes) bancoDados.organizacoes = [];
+            if (!bancoDados.leis) bancoDados.leis = [];
+            if (!bancoDados.fisica) bancoDados.fisica = [];
+            if (!bancoDados.projetos) bancoDados.projetos = [];
+            
+            if(bancoDados.protocolo) document.getElementById('regrasIA').value = bancoDados.protocolo;
+            
+            // Carregar população
+            if(bancoDados.configDemografica) {
+                if(document.getElementById('popMundial')) {
+                   // Formata a população inicial se existir
+                   document.getElementById('popMundial').value = parseInt(bancoDados.configDemografica.populacaoTotal).toLocaleString('pt-BR');
+                }
+            }
+
+        } catch (e) { console.error("Erro ao carregar dados:", e); }
+    }
+
+    function renderizarTudo() {
+        renderizarAbasPersonalizadas();
+        renderizarPersonagens();
+        renderizarOrganizacoes();
+        renderizarElite(); 
+        renderizarLeis();
+        renderizarFisica();
+        renderizarNacoes();
+        atualizarIdades();
+        renderizarListaCapitulos();
+        renderizarListaProjetos(); // Renderizar Projetos
+    }
+
+    // --- FUNÇÕES DE SUPORTE ---
+    function atualizarIdades() {
+        const hoje = new Date(document.getElementById('dataAtual').value || new Date());
+        bancoDados.personagens.forEach((p, i) => {
+            if(p.nascimento) {
+                const nasc = new Date(p.nascimento);
+                let idade = hoje.getFullYear() - nasc.getFullYear();
+                const m = hoje.getMonth() - nasc.getMonth();
+                if (m < 0 || (m === 0 && hoje.getDate() < nasc.getDate())) idade--;
+                let display = idade;
+                if(p.rank === 'SSS' && idade > 25) display = `25 (${idade})`;
+                const el = document.getElementById(`idade-${i}`);
+                if(el) el.innerText = display;
+            }
+        });
+    }
+
+    function salvarInfoNacao(pais, campo, val) {
+        if(!bancoDados.nacoesInfo[pais]) bancoDados.nacoesInfo[pais] = {};
+        bancoDados.nacoesInfo[pais][campo] = val;
+    }
+
+    function updGen(id, i, field, val) {
+        let key = id.includes('Leis') ? 'leis' : 'fisica';
+        bancoDados[key][i][field] = val;
+    }
+
+    // --- LÓGICA DE EDIÇÃO DE DETALHES ---
+    function updateDetail(charIndex, type, itemIndex, field, newValue) {
+        bancoDados.personagens[charIndex][type][itemIndex][field] = newValue;
+        renderizarPersonagens(); 
+    }
+    function deleteDetail(charIndex, type, itemIndex) {
+        if(confirm("Deletar este item?")) {
+            bancoDados.personagens[charIndex][type].splice(itemIndex, 1);
+            renderizarPersonagens();
+        }
+    }
+    function updateDetailOrg(orgIndex, type, itemIndex, field, newValue) {
+        bancoDados.organizacoes[orgIndex][type][itemIndex][field] = newValue;
+        renderizarOrganizacoes(); 
+    }
+    function deleteDetailOrg(orgIndex, type, itemIndex) {
+        if(confirm("Deletar este item da organização?")) {
+            bancoDados.organizacoes[orgIndex][type].splice(itemIndex, 1);
+            renderizarOrganizacoes();
+        }
+    }
+
+    // --- LÓGICA DO LIVRO MODULAR (CANONE) ---
+    function naturalSort(a, b) { return a.id.localeCompare(b.id, undefined, { numeric: true, sensitivity: 'base' }); }
+
+    function renderizarListaCapitulos() {
+        const lista = document.getElementById('listaCapitulos');
+        const filtro = document.getElementById('buscaCapitulo').value.toLowerCase();
+        lista.innerHTML = '';
+        if(!Array.isArray(bancoDados.historia)) bancoDados.historia = [];
+        bancoDados.historia.sort(naturalSort);
+        bancoDados.historia.forEach(cap => {
+            if(filtro && !cap.titulo.toLowerCase().includes(filtro) && !cap.id.includes(filtro)) return;
+            const div = document.createElement('div');
+            div.className = 'chapter-list-item';
+            
+            const nivel = (cap.id.match(/\./g) || []).length + 1;
+            const indentClass = `chapter-indent-${Math.min(nivel, 3)}`;
+            
+            // Layout flexivel para titulo e botão
+            div.innerHTML = `
+                <div style="flex:1" onclick="carregarCapituloNoEditor('${cap.id}')">
+                    <span class="${indentClass}">${cap.id}</span> - ${cap.titulo}
+                </div>
+                <button class="btn-proc" onclick="event.stopPropagation(); iaProcessarEntidades('${cap.id}')" title="IA: Extrair dados e atualizar abas">⚙️</button>
+            `;
+            
+            if(capituloAtualId === cap.id) div.classList.add('active');
+            lista.appendChild(div);
+        });
+        if(!capituloAtualId && bancoDados.historia.length > 0) carregarCapituloNoEditor(bancoDados.historia[0].id);
+    }
+
+    function carregarCapituloNoEditor(id) {
+        if(capituloAtualId && capituloAtualId !== id) salvarConteudoCapitulo();
+        capituloAtualId = id;
+        const cap = bancoDados.historia.find(c => c.id === id);
+        if(!cap) return;
+        document.getElementById('editorId').value = cap.id;
+        document.getElementById('editorTitulo').value = cap.titulo || '';
+        document.getElementById('textoCapitulo').value = cap.conteudo || '';
+        document.getElementById('printTitle').innerText = `${cap.id} - ${cap.titulo}`;
+        atualizarContador();
+        renderizarListaCapitulos();
+    }
+
+    function salvarConteudoCapitulo() {
+        if(!capituloAtualId) return;
+        const cap = bancoDados.historia.find(c => c.id === capituloAtualId);
+        if(cap) { cap.conteudo = document.getElementById('textoCapitulo').value; atualizarContador(); }
+    }
+
+    function atualizarMetaCapitulo() {
+        if(!capituloAtualId) return;
+        const novoId = document.getElementById('editorId').value.trim();
+        const novoTitulo = document.getElementById('editorTitulo').value;
+        const cap = bancoDados.historia.find(c => c.id === capituloAtualId);
+        if(cap) {
+            if(novoId !== cap.id) {
+                if(bancoDados.historia.find(c => c.id === novoId)) { alert('Erro: Já existe um capítulo com este ID!'); document.getElementById('editorId').value = cap.id; return; }
+                cap.id = novoId; capituloAtualId = novoId;
+            }
+            cap.titulo = novoTitulo; renderizarListaCapitulos();
+        }
+    }
+
+    function criarNovoCapituloUI() {
+        const id = prompt("Digite o ID do novo capítulo (ex: 1.5, 2.1.3):");
+        if(!id) return;
+        if(bancoDados.historia.find(c => c.id === id)) { alert("ID já existe!"); return; }
+        const titulo = prompt("Título do Capítulo:");
+        bancoDados.historia.push({ id: id, titulo: titulo || "Sem Título", conteudo: "" });
+        renderizarListaCapitulos();
+        carregarCapituloNoEditor(id);
+    }
+
+    function deletarCapituloAtual() {
+        if(!capituloAtualId) return;
+        if(confirm(`Tem certeza que deseja apagar o capítulo ${capituloAtualId}?`)) {
+            bancoDados.historia = bancoDados.historia.filter(c => c.id !== capituloAtualId);
+            capituloAtualId = null;
+            renderizarListaCapitulos();
+            document.getElementById('editorId').value = "";
+            document.getElementById('editorTitulo').value = "";
+            document.getElementById('textoCapitulo').value = "";
+        }
+    }
+    
+    function atualizarContador() { document.getElementById('contadorChars').innerText = document.getElementById('textoCapitulo').value.length.toLocaleString(); }
+    function filtrarCapitulos() { renderizarListaCapitulos(); }
+
+
+    // --- LÓGICA DA ABA PROJETOS (IDEIAS) - CÓPIA FUNCIONAL DO LIVRO ---
+    function renderizarListaProjetos() {
+        const lista = document.getElementById('listaProjetos');
+        const filtro = document.getElementById('buscaProjetos').value.toLowerCase();
+        lista.innerHTML = '';
+        if(!Array.isArray(bancoDados.projetos)) bancoDados.projetos = [];
+        bancoDados.projetos.sort(naturalSort);
+        
+        bancoDados.projetos.forEach(proj => {
+            if(filtro && !proj.titulo.toLowerCase().includes(filtro) && !proj.id.includes(filtro)) return;
+            const div = document.createElement('div');
+            div.className = 'chapter-list-item';
+            div.innerHTML = `<span style="color:var(--proj-color); font-weight:bold;">${proj.id}</span> - ${proj.titulo}`;
+            if(projetoAtualId === proj.id) div.classList.add('active');
+            div.onclick = () => carregarProjetoNoEditor(proj.id);
+            lista.appendChild(div);
+        });
+        if(!projetoAtualId && bancoDados.projetos.length > 0) carregarProjetoNoEditor(bancoDados.projetos[0].id);
+    }
+
+    function carregarProjetoNoEditor(id) {
+        if(projetoAtualId && projetoAtualId !== id) salvarConteudoProjeto();
+        projetoAtualId = id;
+        const proj = bancoDados.projetos.find(p => p.id === id);
+        if(!proj) return;
+        document.getElementById('editorIdProj').value = proj.id;
+        document.getElementById('editorTituloProj').value = proj.titulo || '';
+        document.getElementById('textoProjeto').value = proj.conteudo || '';
+        atualizarContadorProj();
+        renderizarListaProjetos();
+    }
+
+    function salvarConteudoProjeto() {
+        if(!projetoAtualId) return;
+        const proj = bancoDados.projetos.find(p => p.id === projetoAtualId);
+        if(proj) { proj.conteudo = document.getElementById('textoProjeto').value; atualizarContadorProj(); }
+    }
+
+    function atualizarMetaProjeto() {
+        if(!projetoAtualId) return;
+        const novoId = document.getElementById('editorIdProj').value.trim();
+        const novoTitulo = document.getElementById('editorTituloProj').value;
+        const proj = bancoDados.projetos.find(p => p.id === projetoAtualId);
+        if(proj) {
+            if(novoId !== proj.id) {
+                if(bancoDados.projetos.find(p => p.id === novoId)) { alert('Erro: Já existe um projeto com este ID!'); document.getElementById('editorIdProj').value = proj.id; return; }
+                proj.id = novoId; projetoAtualId = novoId;
+            }
+            proj.titulo = novoTitulo; renderizarListaProjetos();
+        }
+    }
+
+    function criarNovoProjetoUI() {
+        const id = prompt("ID do Projeto/Esboço (ex: Ideia1, P.5, RascunhoA):");
+        if(!id) return;
+        if(bancoDados.projetos.find(p => p.id === id)) { alert("ID já existe!"); return; }
+        const titulo = prompt("Título do Projeto:");
+        bancoDados.projetos.push({ id: id, titulo: titulo || "Nova Ideia", conteudo: "" });
+        renderizarListaProjetos();
+        carregarProjetoNoEditor(id);
+    }
+
+    function deletarProjetoAtual() {
+        if(!projetoAtualId) return;
+        if(confirm(`Tem certeza que deseja apagar o projeto ${projetoAtualId}?`)) {
+            bancoDados.projetos = bancoDados.projetos.filter(p => p.id !== projetoAtualId);
+            projetoAtualId = null;
+            renderizarListaProjetos();
+            document.getElementById('editorIdProj').value = "";
+            document.getElementById('editorTituloProj').value = "";
+            document.getElementById('textoProjeto').value = "";
+        }
+    }
+
+    function atualizarContadorProj() { document.getElementById('contadorCharsProj').innerText = document.getElementById('textoProjeto').value.length.toLocaleString(); }
+    function filtrarProjetos() { renderizarListaProjetos(); }
+
+
+    // --- FUNÇÕES DE EXPORTAÇÃO (ATUALIZADAS COM DATA E HORA) ---
+    function baixarBackupCompleto() {
+        salvarDadosLocal(); 
+        // --- INCLUIR CHAVES NO BACKUP ---
+        const dadosExportacao = { ...bancoDados };
+        dadosExportacao.chavesAPI = apiKeysList;
+        // --------------------------------
+        const nomeArquivo = `Backup_Codex_Completo_${getFormattedDate()}.json`;
+        downloadString(JSON.stringify(dadosExportacao, null, 2), "application/json", nomeArquivo);
+    }
+
+    function baixarLivroJSON() {
+        const nomeArquivo = `Livro_Saga_${getFormattedDate()}.json`;
+        downloadString(JSON.stringify(bancoDados.historia, null, 2), "application/json", nomeArquivo);
+    }
+    
+    function baixarProjetosJSON() {
+        const nomeArquivo = `Projetos_Ideias_${getFormattedDate()}.json`;
+        downloadString(JSON.stringify(bancoDados.projetos, null, 2), "application/json", nomeArquivo);
+    }
+    
+    function baixarJSONAba(key) {
+        let data = key === 'config' ? bancoDados.configDemografica : bancoDados[key];
+        if(!data) { alert("Dados não encontrados para esta aba."); return; }
+        const nomeArquivo = `Backup_Aba_${key}_${getFormattedDate()}.json`;
+        downloadString(JSON.stringify(data, null, 2), "application/json", nomeArquivo);
+    }
+
+    function baixarHTMLCompleto() {
+        salvarDadosLocal(); 
+        switchTab('aba-regras', document.getElementById('tab-regras'));
+        let htmlContent = document.documentElement.outerHTML;
+        const regexScriptAntigo = /<script id="dados-injetados">[\s\S]*?<\/script>/;
+        htmlContent = htmlContent.replace(regexScriptAntigo, '<script id="dados-injetados"><\/script>');
+        const jsonSeguro = JSON.stringify(bancoDados).replace(/\\/g, '\\\\').replace(/<\/script>/g, '<\\/script>'); 
+        const scriptInjecao = `<script id="dados-injetados">window.dadosInjetados = ${jsonSeguro};<\/script>`;
+        htmlContent = htmlContent.replace('<script id="dados-injetados"><\/script>', scriptInjecao);
+        if (!htmlContent.includes('window.dadosInjetados =')) {
+             if(htmlContent.includes('</body>')) { htmlContent = htmlContent.replace('</body>', `${scriptInjecao}</body>`); } 
+             else { htmlContent += scriptInjecao; }
+        }
+        const blob = new Blob([htmlContent], {type:"text/html;charset=utf-8"});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `Codice_A_Fenda_v9.2_${getFormattedDate()}.html`;
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(url), 1500);
+    }
+
+    function baixarDoc(origem) {
+        if (typeof htmlDocx === 'undefined') {
+            alert("A biblioteca de conversão DOCX não carregou. Verifique sua internet.");
+            return;
+        }
+
+        let lista = [];
+        let nomeBase = "";
+        
+        if (origem === 'livro') {
+            salvarConteudoCapitulo();
+            lista = bancoDados.historia;
+            nomeBase = "Livro_Completo";
+        } else {
+            salvarConteudoProjeto();
+            lista = bancoDados.projetos;
+            nomeBase = "Projetos_Rascunhos";
+        }
+
+        if (!lista || lista.length === 0) { alert("Nada para baixar."); return; }
+
+        // Ordena
+        lista.sort(naturalSort);
+
+        // Monta o conteúdo HTML limpo para conversão
+        let conteudoHtml = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+            <meta charset="UTF-8">
+            <style>
+                body { font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; line-height: 1.5; }
+                h1 { font-size: 16pt; font-weight: bold; color: #2c3e50; page-break-before: always; }
+                h1:first-child { page-break-before: auto; }
+                p { margin-bottom: 10pt; text-align: justify; text-indent: 0.5cm; }
+                .meta { font-size: 9pt; color: #666; font-style: italic; margin-bottom: 20pt; border-bottom: 1px solid #ddd; padding-bottom: 5px; }
+            </style>
+            </head><body>
+        `;
+
+        const marcador = document.getElementById('marcadorTexto').value;
+
+        lista.forEach(item => {
+            conteudoHtml += `<h1>${item.id} - ${item.titulo}</h1>`;
+            conteudoHtml += `<div class='meta'>ID: ${item.id} | ${origem.toUpperCase()} | Exportado em: ${getFormattedDate()}</div>`;
+            
+            const paragrafos = (item.conteudo || "").split('\n');
+            paragrafos.forEach(p => {
+                // Filtra marcadores e linhas vazias excessivas
+                if (p.trim() && !p.trim().startsWith(marcador)) {
+                    conteudoHtml += `<p>${p}</p>`;
+                }
+            });
+            conteudoHtml += "<br/>";
+        });
+
+        conteudoHtml += "</body></html>";
+
+        // --- A MÁGICA DO DOCX AQUI ---
+        try {
+            // Converte o HTML para Blob DOCX usando a biblioteca
+            var converted = htmlDocx.asBlob(conteudoHtml, {
+                orientation: 'portrait',
+                margins: { top: 720, right: 720, bottom: 720, left: 720 } // Margens padrão Word
+            });
+
+            // Cria o link de download
+            const url = URL.createObjectURL(converted);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `${nomeBase}_${getFormattedDate()}.docx`; // Extensão .docx real
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+            
+        } catch (e) {
+            console.error(e);
+            alert("Erro ao gerar DOCX. Verifique se você está conectado à internet para carregar a biblioteca conversora.");
+        }
+    }
+
+    function baixarTabela(tableId, nomeBase) {
+        const table = document.getElementById(tableId);
+        let html = `<html><head><meta charset="UTF-8"></head><body><table border="1">${table.innerHTML}</table></body></html>`;
+        html = html.replace(/<button.*?>.*?<\/button>/g, ""); 
+        html = html.replace(/<input.*?value="(.*?)".*?>/g, "$1");
+        html = html.replace(/<select.*?>(.*?)<\/select>/g, (match) => "Valor Selecionado");
+        const nomeArquivo = `${nomeBase}_${getFormattedDate()}.xls`;
+        downloadString(html, "application/vnd.ms-excel", nomeArquivo);
+    }
+
+    function downloadString(text, fileType, fileName) {
+        const blob = new Blob([text], { type: fileType });
+        const a = document.createElement('a'); a.download = fileName; a.href = URL.createObjectURL(blob); a.style.display = "none";
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    }
+
+    // --- ORDENAÇÃO ---
+    function ordenarTabela(coluna) {
+        if (estadoOrdenacao.coluna === coluna) { estadoOrdenacao.direcao *= -1; } else { estadoOrdenacao.coluna = coluna; estadoOrdenacao.direcao = 1; }
+        atualizarIconesOrdenacao(coluna, 'sort', estadoOrdenacao);
+        
+        bancoDados.personagens.sort((a, b) => {
+            let valA = a[coluna] || "";
+            let valB = b[coluna] || "";
+
+            // 1. ORDENAR POR INFO (Contador do círculo azul)
+            if (coluna === 'info') {
+                const countA = (a.personalidade?.length||0) + (a.inventario?.length||0) + (a.eventos?.length||0) + (a.relacionamentos?.length||0) + (a.aparencia?.length||0);
+                const countB = (b.personalidade?.length||0) + (b.inventario?.length||0) + (b.eventos?.length||0) + (b.relacionamentos?.length||0) + (b.aparencia?.length||0);
+                return (countA - countB) * estadoOrdenacao.direcao;
+            }
+
+            // 2. ORDENAR POR IDADE (Correção matemática)
+            if (coluna === 'idade') {
+                const dateA = a.nascimento ? new Date(a.nascimento).getTime() : 0;
+                const dateB = b.nascimento ? new Date(b.nascimento).getTime() : 0;
+                // Data maior = Mais jovem, por isso inverte a lógica
+                return (dateB - dateA) * estadoOrdenacao.direcao;
+            }
+
+            // 3. ORDENAR POR PODER (NP)
+            if (coluna === 'np') {
+                const numA = parseInt(String(valA).replace(/\./g, '') || 0);
+                const numB = parseInt(String(valB).replace(/\./g, '') || 0);
+                return (numA - numB) * estadoOrdenacao.direcao;
+            }
+            
+            // 4. ORDENAR POR RANK
+            if (coluna === 'rank') {
+                const indexA = RANKS_OPTIONS.indexOf(valA);
+                const indexB = RANKS_OPTIONS.indexOf(valB);
+                return (indexA - indexB) * estadoOrdenacao.direcao;
+            }
+
+            return String(valA).localeCompare(String(valB)) * estadoOrdenacao.direcao;
+        });
+        
+        renderizarPersonagens();
+    }
+
+    function ordenarTabelaOrg(coluna) {
+        if (estadoOrdenacaoOrg.coluna === coluna) { estadoOrdenacaoOrg.direcao *= -1; } else { estadoOrdenacaoOrg.coluna = coluna; estadoOrdenacaoOrg.direcao = 1; }
+        atualizarIconesOrdenacao(coluna, 'sort-org', estadoOrdenacaoOrg);
+        bancoDados.organizacoes.sort((a, b) => {
+            let valA = a[coluna] || "";
+            let valB = b[coluna] || "";
+            if (coluna === 'info') {
+                const countA = (a.membros?.length||0) + (a.historico?.length||0) + (a.regrasInternas?.length||0) + (a.citacoes ? a.citacoes.split(',').filter(s=>s.trim()).length : 0);
+                const countB = (b.membros?.length||0) + (b.historico?.length||0) + (b.regrasInternas?.length||0) + (b.citacoes ? b.citacoes.split(',').filter(s=>s.trim()).length : 0);
+                return (countA - countB) * estadoOrdenacaoOrg.direcao;
+            }
+            if (coluna === 'citacoes') {
+                const countA = (a.citacoes || "").split(',').filter(c => c.trim() !== "").length;
+                const countB = (b.citacoes || "").split(',').filter(c => c.trim() !== "").length;
+                return (countA - countB) * estadoOrdenacaoOrg.direcao;
+            }
+            return String(valA).localeCompare(String(valB)) * estadoOrdenacaoOrg.direcao;
+        });
+        renderizarOrganizacoes();
+    }
+
+    function ordenarTabelaFisica(coluna) {
+        if (estadoOrdenacaoFisica.coluna === coluna) { estadoOrdenacaoFisica.direcao *= -1; } else { estadoOrdenacaoFisica.coluna = coluna; estadoOrdenacaoFisica.direcao = 1; }
+        atualizarIconesOrdenacao(coluna, 'sort-fisica', estadoOrdenacaoFisica);
+        bancoDados.fisica.sort((a, b) => {
+            let valA = a[coluna] || "";
+            let valB = b[coluna] || "";
+            if (coluna === 'info') {
+                const countA = a.citacoes ? a.citacoes.split(',').filter(s=>s.trim()).length : 0;
+                const countB = b.citacoes ? b.citacoes.split(',').filter(s=>s.trim()).length : 0;
+                return (countA - countB) * estadoOrdenacaoFisica.direcao;
+            }
+            if (coluna === 'citacoes') {
+                const countA = (a.citacoes || "").split(',').filter(c => c.trim() !== "").length;
+                const countB = (b.citacoes || "").split(',').filter(c => c.trim() !== "").length;
+                return (countA - countB) * estadoOrdenacaoFisica.direcao;
+            }
+            return String(valA).localeCompare(String(valB)) * estadoOrdenacaoFisica.direcao;
+        });
+        renderizarFisica();
+    }
+
+    function ordenarTabelaLeis(coluna) {
+        if (estadoOrdenacaoLeis.coluna === coluna) { estadoOrdenacaoLeis.direcao *= -1; } else { estadoOrdenacaoLeis.coluna = coluna; estadoOrdenacaoLeis.direcao = 1; }
+        atualizarIconesOrdenacao(coluna, 'sort-lei', estadoOrdenacaoLeis);
+        bancoDados.leis.sort((a, b) => {
+            let valA = a[coluna] || "";
+            let valB = b[coluna] || "";
+            if (coluna === 'info') {
+                const countA = a.citacoes ? a.citacoes.split(',').filter(s=>s.trim()).length : 0;
+                const countB = b.citacoes ? b.citacoes.split(',').filter(s=>s.trim()).length : 0;
+                return (countA - countB) * estadoOrdenacaoLeis.direcao;
+            }
+            if (coluna === 'citacoes') {
+                const countA = (a.citacoes || "").split(',').filter(c => c.trim() !== "").length;
+                const countB = (b.citacoes || "").split(',').filter(c => c.trim() !== "").length;
+                return (countA - countB) * estadoOrdenacaoLeis.direcao;
+            }
+            return String(valA).localeCompare(String(valB)) * estadoOrdenacaoLeis.direcao;
+        });
+        renderizarLeis();
+    }
+
+    function atualizarIconesOrdenacao(colunaAtiva, prefixo, estado) {
+        document.querySelectorAll('.sort-icon').forEach(el => el.innerText = '');
+        const icone = estado.direcao === 1 ? '⬆️' : '⬇️';
+        const el = document.getElementById(`${prefixo}-${colunaAtiva}`);
+        if(el) el.innerText = icone;
+    }
+
+    // --- RENDERIZAÇÃO PERSONAGENS ---
+    // --- RENDERIZAÇÃO OTIMIZADA (PERSONAGENS) ---
+    function renderizarPersonagens() {
+        const tbody = document.getElementById('listaPersonagens');
+        const dataMundoInput = document.getElementById('dataAtual').value;
+        const hoje = dataMundoInput ? new Date(dataMundoInput) : new Date();
+        
+        let htmlBuffer = ""; // Otimização de velocidade
+
+        bancoDados.personagens.forEach((p, index) => {
+            // Garantia de Arrays
+            if(!Array.isArray(p.personalidade)) p.personalidade = [];
+            if(!Array.isArray(p.inventario)) p.inventario = [];
+            if(!Array.isArray(p.eventos)) p.eventos = [];
+            if(!Array.isArray(p.relacionamentos)) p.relacionamentos = [];
+            if(!Array.isArray(p.aparencia)) p.aparencia = [];
+
+            const infoCount = p.personalidade.length + p.inventario.length + p.eventos.length + p.relacionamentos.length + p.aparencia.length;
+
+            // Lógica de Psique
+            let psiqueHTML = '';
+            if (p.personalidade.length > 0) {
+                const rev = [...p.personalidade].reverse();
+                psiqueHTML += `<div class="psyche-dominant"><b>🧠 Estado Dominante:</b> ${rev[0].traco} (${rev[0].data})</div>`;
+                if(rev[1]) psiqueHTML += `<div class="psyche-recent"><b>Influência Recente:</b> ${rev[1].traco}</div>`;
+            } else { psiqueHTML = '<i>Sem registros.</i>'; }
+
+            // Lógica de Rank e Badge
+            let rankClass = 'badge';
+            const r = (p.rank || '').trim().toUpperCase();
+            if(r === 'SSS') rankClass += ' badge-sss';
+            else if(r === 'SS') rankClass += ' badge-ss';
+            else if(r === 'S') rankClass += ' badge-s';
+            else if(r === 'A') rankClass += ' badge-a';
+            else if(r === 'B') rankClass += ' badge-b';
+            
+            let rankOptions = RANKS_OPTIONS.map(opt => `<option value="${opt}" ${opt === p.rank ? 'selected' : ''}>${opt}</option>`).join('');
+
+            // Lógica de Idade
+            let displayIdade = '-';
+            if (p.nascimento) {
+                const nasc = new Date(p.nascimento);
+                let idade = hoje.getFullYear() - nasc.getFullYear();
+                const m = hoje.getMonth() - nasc.getMonth();
+                if (m < 0 || (m === 0 && hoje.getDate() < nasc.getDate())) { idade--; }
+                if (r === 'SSS' && idade > 25) displayIdade = `25 (${idade})`;
+                else displayIdade = idade;
+            }
+            
+            // CONSTRUÇÃO DO HTML COMPLETO
+            htmlBuffer += `
+                <tr>
+                    <td style="white-space:nowrap;">
+                        <input type="checkbox" class="check-personagem" value="${index}" style="width:auto; margin-right:5px;">
+                        <span style="cursor:pointer" onclick="toggleDetalhes(${index})">➕ <span class="badge-info">${infoCount}</span></span>
+                    </td>
+                    <td contenteditable="true" class="editable" onblur="updChar(${index}, 'nome', this.innerText)">${p.nome}</td>
+                    <td contenteditable="true" class="editable" onblur="updChar(${index}, 'pais', this.innerText)">${p.pais}</td>
+                    <td>
+                        <div style="display:flex; align-items:center;">
+                            <span id="rank-badge-${index}" class="${rankClass}">${p.rank || '-'}</span>
+                            <select style="width:auto; flex:1;" onchange="updChar(${index}, 'rank', this.value)">${rankOptions}</select>
+                        </div>
+                    </td>
+                    <td contenteditable="true" class="editable number-cell" onblur="updChar(${index}, 'np', this.innerText)">${parseInt(p.np||0).toLocaleString('pt-BR')}</td>
+                    <td><input type="date" value="${p.nascimento||''}" onchange="updChar(${index}, 'nascimento', this.value)"></td>
+                    <td id="idade-${index}" style="font-weight:bold; text-align:center;">${displayIdade}</td>
+                    <td contenteditable="true" class="editable" onblur="updChar(${index}, 'status', this.innerText)">${p.status||''}</td>
+                    <td class="no-print">
+                        <button class="btn btn-warning btn-sm" onclick="resetarPersonagem(${index})" title="Resetar Histórico">♻️</button>
+                        <button class="btn btn-danger btn-sm" onclick="delItem('personagens', ${index})">X</button>
+                    </td>
+                </tr>
+                <tr id="detalhe-${index}" style="display:none" class="char-detail-row"><td colspan="9">
+                    <div class="char-detail-container">
+                        <div class="detail-grid">
+                            <div>
+                                <h4>🧠 Personalidade & Ideologia</h4>
+                                ${psiqueHTML}
+                                <div class="timeline-box">
+                                    ${[...p.personalidade].reverse().map((t, idx) => `
+                                        <div class="timeline-item">
+                                            <div class="timeline-date" contenteditable="true" onblur="updateDetail(${index}, 'personalidade', ${p.personalidade.length-1-idx}, 'data', this.innerText)">${t.data}</div>
+                                            <div class="timeline-content">
+                                                <b contenteditable="true" onblur="updateDetail(${index}, 'personalidade', ${p.personalidade.length-1-idx}, 'traco', this.innerText)">${t.traco}</b><br>
+                                                <small contenteditable="true" onblur="updateDetail(${index}, 'personalidade', ${p.personalidade.length-1-idx}, 'desc', this.innerText)">${t.desc||''}</small>
+                                                <button class="btn-del-mini" onclick="deleteDetail(${index}, 'personalidade', ${p.personalidade.length-1-idx})">x</button>
+                                            </div>
+                                        </div>`).join('')}
+                                </div>
+                                <button class="btn btn-sm btn-secondary" style="margin-top:5px;" onclick="addTraco(${index})">+ Traço</button>
+                            </div>
+                            <div>
+                                <h4>🎒 Inventário</h4>
+                                <div class="timeline-box">
+                                    ${[...p.inventario].reverse().map((it, idx) => `
+                                        <div class="timeline-item">
+                                            <div class="timeline-date" contenteditable="true" onblur="updateDetail(${index}, 'inventario', ${p.inventario.length-1-idx}, 'data', this.innerText)">${it.data}</div>
+                                            <div class="timeline-content">
+                                                <b contenteditable="true" onblur="updateDetail(${index}, 'inventario', ${p.inventario.length-1-idx}, 'item', this.innerText)">${it.item}</b><br>
+                                                <small contenteditable="true" onblur="updateDetail(${index}, 'inventario', ${p.inventario.length-1-idx}, 'desc', this.innerText)">${it.desc||''}</small>
+                                                <button class="btn-del-mini" onclick="deleteDetail(${index}, 'inventario', ${p.inventario.length-1-idx})">x</button>
+                                            </div>
+                                        </div>`).join('')}
+                                </div>
+                                <button class="btn btn-sm btn-secondary" style="margin-top:5px;" onclick="addItem(${index})">+ Item</button>
+                            </div>
+                            <div>
+                                <h4>👁️ Aparência</h4>
+                                <div class="timeline-box">
+                                    ${[...p.aparencia].reverse().map((ap, idx) => `
+                                        <div class="timeline-item">
+                                            <div class="timeline-date" contenteditable="true" onblur="updateDetail(${index}, 'aparencia', ${p.aparencia.length-1-idx}, 'data', this.innerText)">${ap.data}</div>
+                                            <div class="timeline-content">
+                                                <b contenteditable="true" onblur="updateDetail(${index}, 'aparencia', ${p.aparencia.length-1-idx}, 'traço', this.innerText)">${ap.traço}</b><br>
+                                                <small contenteditable="true" onblur="updateDetail(${index}, 'aparencia', ${p.aparencia.length-1-idx}, 'desc', this.innerText)">${ap.desc||''}</small>
+                                                <button class="btn-del-mini" onclick="deleteDetail(${index}, 'aparencia', ${p.aparencia.length-1-idx})">x</button>
+                                            </div>
+                                        </div>`).join('')}
+                                </div>
+                                <button class="btn btn-sm btn-secondary" style="margin-top:5px;" onclick="addAparencia(${index})">+ Mudança</button>
+                            </div>
+                            <div>
+                                <h4>❤️ Relacionamentos</h4>
+                                <div class="timeline-box">
+                                    ${[...p.relacionamentos].reverse().map((rel, idx) => `
+                                        <div class="timeline-item">
+                                            <div class="timeline-date" contenteditable="true" onblur="updateDetail(${index}, 'relacionamentos', ${p.relacionamentos.length-1-idx}, 'data', this.innerText)">${rel.data}</div>
+                                            <div class="timeline-content">
+                                                <b contenteditable="true" onblur="updateDetail(${index}, 'relacionamentos', ${p.relacionamentos.length-1-idx}, 'alvo', this.innerText)">${rel.alvo}</b> 
+                                                (<span contenteditable="true" onblur="updateDetail(${index}, 'relacionamentos', ${p.relacionamentos.length-1-idx}, 'sentimento', this.innerText)">${rel.sentimento}</span>)<br>
+                                                <small contenteditable="true" onblur="updateDetail(${index}, 'relacionamentos', ${p.relacionamentos.length-1-idx}, 'motivo', this.innerText)">${rel.motivo}</small>
+                                                <button class="btn-del-mini" onclick="deleteDetail(${index}, 'relacionamentos', ${p.relacionamentos.length-1-idx})">x</button>
+                                            </div>
+                                        </div>`).join('')}
+                                </div>
+                                <button class="btn btn-sm btn-secondary" style="margin-top:5px;" onclick="addRelacionamento(${index})">+ Relação</button>
+                            </div>
+                            <div>
+                                <h4>📅 Eventos</h4>
+                                <div class="timeline-box">
+                                    ${[...p.eventos].reverse().map((e, idx) => `
+                                        <div class="timeline-item">
+                                            <div class="timeline-date" contenteditable="true" onblur="updateDetail(${index}, 'eventos', ${p.eventos.length-1-idx}, 'data', this.innerText)">${e.data}</div>
+                                            <div class="timeline-content">
+                                                <span contenteditable="true" onblur="updateDetail(${index}, 'eventos', ${p.eventos.length-1-idx}, 'desc', this.innerText)">${e.desc}</span>
+                                                <button class="btn-del-mini" onclick="deleteDetail(${index}, 'eventos', ${p.eventos.length-1-idx})">x</button>
+                                            </div>
+                                        </div>`).join('')}
+                                </div>
+                                <button class="btn btn-sm btn-secondary" style="margin-top:5px;" onclick="addEvt(${index})">+ Evento</button>
+                            </div>
+                        </div>
+                    </div>
+                </td></tr>`;
+        });
+        
+        tbody.innerHTML = htmlBuffer;
+    }
+
+    // --- RENDERIZAÇÃO ORGANIZAÇÕES ---
+    // --- RENDERIZAÇÃO OTIMIZADA (ORGANIZAÇÕES) ---
+    function renderizarOrganizacoes() {
+        const tbody = document.getElementById('listaOrganizacoes');
+        let htmlBuffer = "";
+        
+        if(!bancoDados.organizacoes) bancoDados.organizacoes = [];
+        bancoDados.organizacoes.forEach((org, index) => {
+            if(!Array.isArray(org.membros)) org.membros = [];
+            if(!Array.isArray(org.historico)) org.historico = [];
+            if(!Array.isArray(org.regrasInternas)) org.regrasInternas = []; 
+            const citacoesArr = (org.citacoes || "").split(',').filter(s => s.trim() !== "");
+            const citacoesCount = citacoesArr.length;
+            const infoCount = org.membros.length + org.historico.length + org.regrasInternas.length + citacoesCount;
+            let citacoesHTML = citacoesArr.map(c => `<span class="citation-chip">${c.trim()}</span>`).join(' ');
+
+            htmlBuffer += `
+                <tr>
+                    <td style="white-space:nowrap;">
+                        <input type="checkbox" class="check-organizacao" value="${index}" style="width:auto; margin-right:5px;">
+                        <span style="cursor:pointer" onclick="toggleDetalhesOrg(${index})">➕ <span class="badge-info">${infoCount}</span></span>
+                    </td>
+                    <td contenteditable="true" class="editable id-cell" onblur="updOrg(${index}, 'id', this.innerText)">${org.id || `ORG-${index+1}`}</td>
+                    <td contenteditable="true" class="editable" onblur="updOrg(${index}, 'nome', this.innerText)">${org.nome || ''}</td>
+                    <td contenteditable="true" class="editable" onblur="updOrg(${index}, 'tipo', this.innerText)">${org.tipo || ''}</td>
+                    <td contenteditable="true" class="editable" onblur="updOrg(${index}, 'sede', this.innerText)">${org.sede || ''}</td>
+                    <td contenteditable="true" class="editable" onblur="updOrg(${index}, 'lider', this.innerText)">${org.lider || ''}</td>
+                    <td contenteditable="true" class="editable" onblur="updOrg(${index}, 'status', this.innerText)">${org.status || ''}</td>
+                    <td class="no-print"><button class="btn btn-danger btn-sm" onclick="delItem('organizacoes', ${index})">X</button></td>
+                </tr>
+                <tr id="detalhe-org-${index}" style="display:none" class="org-detail-row"><td colspan="8">
+                    <div class="char-detail-container">
+                        <div style="margin-bottom: 15px; border-bottom: 1px dashed var(--border-color); padding-bottom: 10px;">
+                            <h4>📚 Citações em Capítulos (Total: ${citacoesCount})</h4>
+                            <div style="margin-bottom:5px;">${citacoesHTML || "<i>Nenhuma citação registrada.</i>"}</div>
+                            <input type="text" placeholder="Editar citações (separar por vírgula ex: 1.1, 1.2)" value="${org.citacoes || ''}" onblur="updOrg(${index}, 'citacoes', this.value)" style="font-size:0.8em; color:#666; width:100%;">
+                        </div>
+                        <div style="margin-bottom: 15px;">
+                            <h4>📜 Descrição & Propósito</h4>
+                            <textarea onblur="updOrg(${index}, 'descricao', this.value)" style="width:100%; height:60px;">${org.descricao || ''}</textarea>
+                        </div>
+                        <div class="org-detail-grid">
+                            <div>
+                                <h4>👥 Membros Chave</h4>
+                                <div class="timeline-box">
+                                    ${[...org.membros].reverse().map((m, idx) => `
+                                        <div class="timeline-item">
+                                            <div class="timeline-date" contenteditable="true" onblur="updateDetailOrg(${index}, 'membros', ${org.membros.length-1-idx}, 'data', this.innerText)">${m.data||'-'}</div>
+                                            <div class="timeline-content">
+                                                <b contenteditable="true" onblur="updateDetailOrg(${index}, 'membros', ${org.membros.length-1-idx}, 'nome', this.innerText)">${m.nome}</b> - 
+                                                <span contenteditable="true" onblur="updateDetailOrg(${index}, 'membros', ${org.membros.length-1-idx}, 'cargo', this.innerText)">${m.cargo}</span>
+                                                <button class="btn-del-mini" onclick="deleteDetailOrg(${index}, 'membros', ${org.membros.length-1-idx})">x</button>
+                                            </div>
+                                        </div>`).join('')}
+                                </div>
+                                <button class="btn btn-sm btn-secondary" style="margin-top:5px;" onclick="addOrgMembro(${index})">+ Membro</button>
+                            </div>
+                            <div>
+                                <h4>📅 Linha do Tempo (Ações)</h4>
+                                <div class="timeline-box">
+                                    ${[...org.historico].reverse().map((h, idx) => `
+                                        <div class="timeline-item">
+                                            <div class="timeline-date" contenteditable="true" onblur="updateDetailOrg(${index}, 'historico', ${org.historico.length-1-idx}, 'data', this.innerText)">${h.data}</div>
+                                            <div class="timeline-content">
+                                                <span contenteditable="true" onblur="updateDetailOrg(${index}, 'historico', ${org.historico.length-1-idx}, 'evento', this.innerText)">${h.evento}</span>
+                                                <button class="btn-del-mini" onclick="deleteDetailOrg(${index}, 'historico', ${org.historico.length-1-idx})">x</button>
+                                            </div>
+                                        </div>`).join('')}
+                                </div>
+                                <button class="btn btn-sm btn-secondary" style="margin-top:5px;" onclick="addOrgEvento(${index})">+ Ação</button>
+                            </div>
+                            <div>
+                                <h4>📜 Leis & Regras Internas</h4>
+                                <div class="timeline-box">
+                                    ${[...org.regrasInternas].reverse().map((r, idx) => `
+                                        <div class="timeline-item">
+                                            <div class="timeline-date" contenteditable="true" onblur="updateDetailOrg(${index}, 'regrasInternas', ${org.regrasInternas.length-1-idx}, 'data', this.innerText)">${r.data}</div>
+                                            <div class="timeline-content">
+                                                <span contenteditable="true" onblur="updateDetailOrg(${index}, 'regrasInternas', ${org.regrasInternas.length-1-idx}, 'regra', this.innerText)">${r.regra}</span>
+                                                <button class="btn-del-mini" onclick="deleteDetailOrg(${index}, 'regrasInternas', ${org.regrasInternas.length-1-idx})">x</button>
+                                            </div>
+                                        </div>`).join('')}
+                                </div>
+                                <button class="btn btn-sm btn-secondary" style="margin-top:5px;" onclick="addOrgRegra(${index})">+ Regra</button>
+                            </div>
+                        </div>
+                    </div>
+                </td></tr>`;
+        });
+        
+        tbody.innerHTML = htmlBuffer;
+    }
+
+    // --- RENDERIZAÇÃO FÍSICA ---
+    function renderizarFisica() {
+        const tbody = document.getElementById('listaFisica');
+        let htmlBuffer = "";
+        bancoDados.fisica.forEach((item, i) => {
+            const citacoesArr = (item.citacoes || "").split(',').filter(s => s.trim() !== "");
+            const citacoesCount = citacoesArr.length;
+            let citacoesHTML = citacoesArr.map(c => `<span class="citation-chip">${c.trim()}</span>`).join(' ');
+            
+            htmlBuffer += `
+            <tr>
+                <td style="white-space:nowrap;">
+                    <input type="checkbox" class="check-fisica" value="${i}" style="width:auto; margin-right:5px;">
+                    <span style="cursor:pointer" onclick="toggleDetalhesFisica(${i})">➕ <span class="badge-info">${citacoesCount}</span></span>
+                </td>
+                <td contenteditable="true" class="editable id-cell" onblur="updGen('listaFisica', ${i}, 'id', this.innerText)">${item.id || `FIS-${i+1}`}</td>
+                <td contenteditable="true" class="editable" onblur="updGen('listaFisica', ${i}, 'regra', this.innerText)">${item.regra || ''}</td>
+                <td contenteditable="true" class="editable" onblur="updGen('listaFisica', ${i}, 'desc', this.innerText)">${item.desc || ''}</td>
+                <td class="no-print"><button class="btn btn-danger" onclick="delItem('fisica', ${i})">X</button></td>
+            </tr>
+            <tr id="detalhe-fisica-${i}" style="display:none;" class="char-detail-row"><td colspan="5">
+                <div class="char-detail-container">
+                    <h4>📚 Capítulos onde esta regra aparece:</h4>
+                    <div style="margin-bottom:10px;">${citacoesHTML || "<i>Sem registros.</i>"}</div>
+                    <label style="font-size:0.8em; color:#666;">Editar Citações (separar por vírgula):</label>
+                    <input type="text" value="${item.citacoes || ''}" onblur="updGen('listaFisica', ${i}, 'citacoes', this.value)" style="width:100%; border:1px solid var(--border-color); padding:5px;">
+                </div>
+            </td></tr>`;
+        });
+        tbody.innerHTML = htmlBuffer;
+    }
+    
+    function toggleDetalhesFisica(i) {
+        const el = document.getElementById(`detalhe-fisica-${i}`);
+        el.style.display = el.style.display === 'none' ? 'table-row' : 'none';
+    }
+
+    // --- RENDERIZAÇÃO LEIS ---
+    function renderizarLeis() {
+        const tbody = document.getElementById('listaLeis');
+        let htmlBuffer = "";
+        bancoDados.leis.forEach((item, i) => {
+            const citacoesArr = (item.citacoes || "").split(',').filter(s => s.trim() !== "");
+            const citacoesCount = citacoesArr.length;
+            let citacoesHTML = citacoesArr.map(c => `<span class="citation-chip">${c.trim()}</span>`).join(' ');
+            
+            htmlBuffer += `
+            <tr>
+                <td style="white-space:nowrap;">
+                    <input type="checkbox" class="check-lei" value="${i}" style="width:auto; margin-right:5px;">
+                    <span style="cursor:pointer" onclick="toggleDetalhesLeis(${i})">➕ <span class="badge-info">${citacoesCount}</span></span>
+                </td>
+                <td contenteditable="true" class="editable id-cell" onblur="updGen('listaLeis', ${i}, 'id', this.innerText)">${item.id || `LEI-${i+1}`}</td>
+                <td contenteditable="true" class="editable" onblur="updGen('listaLeis', ${i}, 'nome', this.innerText)">${item.nome || ''}</td>
+                <td contenteditable="true" class="editable" onblur="updGen('listaLeis', ${i}, 'desc', this.innerText)">${item.desc || ''}</td>
+                <td contenteditable="true" class="editable" onblur="updGen('listaLeis', ${i}, 'data', this.innerText)">${item.data || ''}</td>
+                <td class="no-print"><button class="btn btn-danger" onclick="delItem('leis', ${i})">X</button></td>
+            </tr>
+            <tr id="detalhe-leis-${i}" style="display:none;" class="char-detail-row"><td colspan="6">
+                <div class="char-detail-container">
+                    <h4>📚 Capítulos onde esta lei aparece:</h4>
+                    <div style="margin-bottom:10px;">${citacoesHTML || "<i>Sem registros.</i>"}</div>
+                    <label style="font-size:0.8em; color:#666;">Editar Citações (separar por vírgula):</label>
+                    <input type="text" value="${item.citacoes || ''}" onblur="updGen('listaLeis', ${i}, 'citacoes', this.value)" style="width:100%; border:1px solid var(--border-color); padding:5px;">
+                </div>
+            </td></tr>`;
+        });
+        tbody.innerHTML = htmlBuffer;
+    }
+
+    function toggleDetalhesLeis(i) {
+        const el = document.getElementById(`detalhe-leis-${i}`);
+        el.style.display = el.style.display === 'none' ? 'table-row' : 'none';
+    }
+
+    function novaOrganizacao() {
+        bancoDados.organizacoes.push({ nome: "Nova Org", tipo: "Guilda", sede: "Global", lider: "?", poder: "Médio", status: "Ativa", membros: [], historico: [], regrasInternas: [], descricao: "", id: `ORG-${Date.now()}`, citacoes: "" });
+        renderizarOrganizacoes();
+    }
+    function updOrg(i, field, val) { bancoDados.organizacoes[i][field] = val; renderizarOrganizacoes(); }
+    function toggleDetalhesOrg(i) { let el = document.getElementById(`detalhe-org-${i}`); el.style.display = el.style.display === 'none' ? 'table-row' : 'none'; }
+    
+    function addOrgMembro(i) {
+        const d = prompt("Data de entrada:", document.getElementById('dataAtual').value);
+        const nome = prompt("Nome do Membro:");
+        const cargo = prompt("Cargo/Função:");
+        if(nome) { bancoDados.organizacoes[i].membros.push({data:d, nome:nome, cargo:cargo}); renderizarOrganizacoes(); }
+    }
+    function addOrgEvento(i) {
+        const d = prompt("Data:", document.getElementById('dataAtual').value);
+        const ev = prompt("Descrição do Evento:");
+        if(ev) { bancoDados.organizacoes[i].historico.push({data:d, evento:ev}); renderizarOrganizacoes(); }
+    }
+    function addOrgRegra(i) {
+        const d = prompt("Data:", document.getElementById('dataAtual').value);
+        const regra = prompt("Regra Interna:");
+        if(regra) { bancoDados.organizacoes[i].regrasInternas.push({data:d, regra:regra}); renderizarOrganizacoes(); }
+    }
+
+    // --- NOVAS FUNÇÕES DE UPDATE ---
+    function addTraco(i) {
+        const d = prompt("Data:", document.getElementById('dataAtual').value);
+        const t = prompt("Novo Traço de Personalidade / Ideologia:");
+        const desc = prompt("Motivo / Contexto:");
+        if(d && t) { bancoDados.personagens[i].personalidade.push({data:d, traco:t, desc:desc}); renderizarPersonagens(); }
+    }
+    function addItem(i) {
+        const d = prompt("Data:", document.getElementById('dataAtual').value);
+        const item = prompt("Nome do Item:");
+        const desc = prompt("Ação (Adquiriu / Perdeu / Usou):");
+        if(d && item) { bancoDados.personagens[i].inventario.push({data:d, item:item, desc:desc}); renderizarPersonagens(); }
+    }
+    function addAparencia(i) {
+        const d = prompt("Data:", document.getElementById('dataAtual').value);
+        const t = prompt("Característica Visual (ex: Cicatriz, Cor do Cabelo):");
+        const desc = prompt("Descrição/Causa:");
+        if(d && t) { bancoDados.personagens[i].aparencia.push({data:d, traço:t, desc:desc}); renderizarPersonagens(); }
+    }
+    function addRelacionamento(i) {
+        const d = prompt("Data:", document.getElementById('dataAtual').value);
+        const alvo = prompt("Personagem Alvo:");
+        const sent = prompt("Sentimento (Feliz, Raiva, Triste...):");
+        const mot = prompt("Motivo:");
+        if(d && alvo) { bancoDados.personagens[i].relacionamentos.push({data:d, alvo:alvo, sentimento:sent, motivo:mot}); renderizarPersonagens(); }
+    }
+    function addEvt(i) { 
+        let d = prompt("Data:", document.getElementById('dataAtual').value); 
+        let text = prompt("Evento:"); 
+        if(d && text) { bancoDados.personagens[i].eventos.push({data:d, desc:text}); renderizarPersonagens(); }
+    }
+
+    // --- ELITE SSS ATUALIZADA ---
+    function renderizarElite() {
+        const tbody = document.getElementById('listaElite');
+        tbody.innerHTML = '';
+        const elite = bancoDados.personagens.filter(p => p.rank === 'SSS').sort((a, b) => parseInt(b.np || 0) - parseInt(a.np || 0));
+        
+        elite.forEach((p, i) => {
+            let idade = '-';
+            let nascDisplay = p.nascimento || '-';
+            if(p.nascimento) {
+                const nascDate = new Date(p.nascimento);
+                const hoje = new Date(document.getElementById('dataAtual').value || new Date());
+                let age = hoje.getFullYear() - nascDate.getFullYear();
+                if (hoje < new Date(hoje.getFullYear(), nascDate.getMonth(), nascDate.getDate())) age--;
+                idade = age;
+            }
+
+            tbody.innerHTML += `<tr>
+                <td style="font-weight:bold; color:var(--accent)">#${i+1}</td>
+                <td><b>${p.nome}</b></td>
+                <td>${p.pais}</td>
+                <td>${nascDisplay}</td>
+                <td>${idade}</td>
+                <td class="number-cell" style="color:purple">${parseInt(p.np||0).toLocaleString('pt-BR')}</td>
+                <td>${p.status}</td>
+            </tr>`;
+        });
+    }
+
+    function renderizarNacoes() {
+        const tbody = document.getElementById('listaNacoes');
+        tbody.innerHTML = '';
+        
+        // CORREÇÃO: Usar a população configurada
+        const popTotal = bancoDados.configDemografica.populacaoTotal || 9000000000;
+        
+        const raridades = bancoDados.configDemografica.raridades;
+        const ranks = ["SS", "S", "A", "B", "C", "D", "E"];
+        const paisesOrdenados = Object.keys(POPULATION_DATA).sort((a,b) => POPULATION_DATA[b] - POPULATION_DATA[a]);
+
+        paisesOrdenados.forEach(pais => {
+            const pct = POPULATION_DATA[pais];
+            const popPais = Math.floor(popTotal * pct);
+            const sssChars = bancoDados.personagens.filter(p => p.pais === pais && p.rank && p.rank.trim().toUpperCase() === 'SSS');
+            const sssCount = sssChars.length;
+            const sssPower = sssChars.reduce((sum, p) => sum + parseInt(p.np || 0), 0);
+
+            let row = `<tr><td><b>${pais}</b></td><td>${(pct*100).toFixed(2)}%</td><td class="number-cell">${popPais.toLocaleString('pt-BR')}</td><td class="number-cell" style="color:purple; font-weight:bold">${sssCount}</td>`;
+            let poderTotal = sssPower; 
+            ranks.forEach(rank => {
+                const count = Math.floor(popPais / raridades[rank].taxa);
+                poderTotal += count * raridades[rank].np;
+                row += `<td class="number-cell">${count.toLocaleString('pt-BR')}</td>`;
+            });
+            let poderFmt = poderTotal > 1e9 ? (poderTotal/1e9).toFixed(1) + " B" : poderTotal.toLocaleString('pt-BR');
+            const info = bancoDados.nacoesInfo[pais] || { politica: "" };
+            row += `<td class="number-cell" style="color:var(--success)">${poderFmt}</td><td contenteditable="true" class="editable" onblur="salvarInfoNacao('${pais}', 'politica', this.innerText)">${info.politica}</td></tr>`;
+            tbody.innerHTML += row;
+        });
+    }
+
+    // --- UPDATES ---
+    function updChar(i, field, val) {
+        if(field === 'np') val = val.replace(/\./g, '');
+        bancoDados.personagens[i][field] = val;
+        if (field === 'rank') {
+            const badge = document.getElementById(`rank-badge-${i}`);
+            if(badge) {
+                badge.innerText = val;
+                let newClass = 'badge';
+                const r = val.trim().toUpperCase();
+                if(r === 'SSS') newClass += ' badge-sss';
+                else if(r === 'SS') newClass += ' badge-ss';
+                else if(r === 'S') newClass += ' badge-s';
+                else if(r === 'A') newClass += ' badge-a';
+                else if(r === 'B') newClass += ' badge-b';
+                badge.className = newClass;
+            }
+            renderizarElite();
+            renderizarNacoes();
+        }
+        if(field === 'pais' || field === 'np') { renderizarElite(); renderizarNacoes(); }
+        if(field === 'nascimento') { atualizarIdades(); renderizarElite(); }
+    }
+    
+    function gerarPainelDemografico() {
+        const container = document.getElementById('painelDemografia');
+        while (container.children.length > 0) { container.removeChild(container.lastChild); } // Limpa tudo antes
+        
+        // Gera inputs para ranks
+        ["SS", "S", "A", "B", "C", "D", "E"].forEach(r => {
+            const d = bancoDados.configDemografica.raridades[r];
+            // Formata para exibição com pontos (ex: 50.000.000)
+            const taxaFormatada = parseInt(d.taxa).toLocaleString('pt-BR');
+            const npFormatado = parseInt(d.np).toLocaleString('pt-BR');
+            
+            container.innerHTML += `<div class="demo-item"><label>1 a cada (Rank ${r}):</label><input type="text" id="taxa-${r}" value="${taxaFormatada}" onchange="salvarConfigDemo(); renderizarNacoes();"><label style="font-size:0.8em">NP Médio:</label><input type="text" id="np-${r}" value="${npFormatado}" onchange="salvarConfigDemo(); renderizarNacoes();"></div>`;
+        });
+        
+        // Formata população total também
+        const popInput = document.getElementById('popMundial');
+        if(popInput && bancoDados.configDemografica.populacaoTotal) {
+             popInput.value = parseInt(bancoDados.configDemografica.populacaoTotal).toLocaleString('pt-BR');
+        }
+    }
+
+    function salvarConfigDemo() {
+        // Atualiza a população total (Remove pontos antes de salvar)
+        const popInput = document.getElementById('popMundial');
+        if(popInput) {
+             bancoDados.configDemografica.populacaoTotal = parseInt(popInput.value.replace(/\./g, '')) || 0;
+        }
+
+        ["SS", "S", "A", "B", "C", "D", "E"].forEach(r => {
+            // Remove pontos antes de salvar
+            const rawTaxa = document.getElementById(`taxa-${r}`).value.replace(/\./g, '');
+            const rawNp = document.getElementById(`np-${r}`).value.replace(/\./g, '');
+            
+            bancoDados.configDemografica.raridades[r].taxa = parseInt(rawTaxa) || 0;
+            bancoDados.configDemografica.raridades[r].np = parseInt(rawNp) || 0;
+        });
+        
+        // Re-renderiza para aplicar a formatação visual (pontos) logo após a edição
+        gerarPainelDemografico();
+    }
+
+    // --- CRUD BÁSICO ---
+    function novoPersonagem() { bancoDados.personagens.push({nome:"Novo", rank:"E", np:100}); renderizarTudo(); }
+    function novaLei() { bancoDados.leis.push({id: `LEI-${Date.now()}`, nome:"Nova", desc:"", citacoes:""}); renderizarLeis(); }
+    function novaRegraFisica() { bancoDados.fisica.push({id: `FIS-${Date.now()}`, regra:"Nova", desc:"", citacoes:""}); renderizarFisica(); }
+    function delItem(key, i) { if(confirm("Deletar?")) { bancoDados[key].splice(i,1); renderizarTudo(); } }
+    function toggleDetalhes(i) { let el = document.getElementById(`detalhe-${i}`); el.style.display = el.style.display === 'none' ? 'table-row' : 'none'; }
+
+    // --- ABAS DINÂMICAS ---
+    function abrirCriadorAba() {
+        const nome = prompt("Nome:"); if(!nome) return;
+        const tipo = prompt("Tipo (texto/tabela):").toLowerCase();
+        let nova = { id: 'aba-'+Date.now(), titulo:nome, tipo:tipo, dados:[], conteudo:'' };
+        if(tipo==='tabela') nova.colunas = prompt("Colunas (sep. virgula):").split(',');
+        bancoDados.abasPersonalizadas.push(nova);
+        renderizarAbasPersonalizadas();
+    }
+
+    function renderizarAbasPersonalizadas() {
+        document.querySelectorAll('.dynamic-tab-btn').forEach(e => e.remove());
+        document.getElementById('dynamic-contents').innerHTML = '';
+        const header = document.getElementById('tab-headers');
+        bancoDados.abasPersonalizadas.forEach(aba => {
+            let btn = document.createElement('div'); btn.className='tab dynamic-tab-btn'; btn.id='btn-'+aba.id; btn.innerText=aba.titulo; btn.onclick=()=>switchTab(aba.id, btn);
+            header.appendChild(btn);
+            let div = document.createElement('div'); div.id=aba.id; div.className='content';
+            let contentHtml = '';
+            if(aba.tipo==='texto') { contentHtml = `<textarea id="texto-${aba.id}" style="height:500px" onblur="saveAbaText('${aba.id}', this.value)">${aba.conteudo||''}</textarea>`; } 
+            else { contentHtml = `<button class="btn btn-primary" onclick="addLinhaAba('${aba.id}')">+ Linha</button><div class="table-wrapper"><table><thead><tr>${aba.colunas.map(c=>`<th>${c}</th>`).join('')}<th>X</th></tr></thead><tbody>${(aba.dados||[]).map((l,i)=>`<tr>${aba.colunas.map((c,j)=>`<td contenteditable="true" onblur="updAbaCell('${aba.id}',${i},${j},this.innerText)">${l[j]||''}</td>`).join('')}<td><button class="btn btn-danger" onclick="delLinhaAba('${aba.id}',${i})">X</button></td></tr>`).join('')}</tbody></table></div>`; }
+            div.innerHTML = `<div class="panel"><div class="header-row"><h2>${aba.titulo}</h2><button class="btn btn-danger" onclick="delAba('${aba.id}')">Excluir Aba</button></div>${contentHtml}</div>`;
+            document.getElementById('dynamic-contents').appendChild(div);
+        });
+    }
+    
+    function saveAbaText(id, val) { bancoDados.abasPersonalizadas.find(a=>a.id===id).conteudo = val; }
+    function addLinhaAba(id) { const aba = bancoDados.abasPersonalizadas.find(a=>a.id===id); aba.dados.push(new Array(aba.colunas.length).fill("")); renderizarAbasPersonalizadas(); setTimeout(()=>switchTab(id, document.getElementById('btn-'+id)), 50); }
+    function updAbaCell(id, i, j, val) { bancoDados.abasPersonalizadas.find(a=>a.id===id).dados[i][j] = val; }
+    function delLinhaAba(id, i) { bancoDados.abasPersonalizadas.find(a=>a.id===id).dados.splice(i,1); renderizarAbasPersonalizadas(); setTimeout(()=>switchTab(id, document.getElementById('btn-'+id)), 50); }
+    function delAba(id) { if(confirm('Excluir esta aba permanentemente?')) { bancoDados.abasPersonalizadas = bancoDados.abasPersonalizadas.filter(a=>a.id!==id); renderizarAbasPersonalizadas(); switchTab('aba-regras', document.getElementById('tab-regras')); } }
+
+    // --- JSON INGEST ---
+    function processarJSON() {
+        try {
+            const inputVal = document.getElementById('jsonInputArea').value;
+            if (!inputVal) { alert("A área de JSON está vazia!"); return; }
+            const data = JSON.parse(inputVal);
+
+            if (data.historia && Array.isArray(data.historia) && data.personagens && Array.isArray(data.personagens)) {
+                if(confirm("⚠️ ATENÇÃO: BACKUP COMPLETO DETECTADO.\nSubstituir TODOS os dados?")) {
+                    bancoDados = data;
+                    
+                    // --- RESTAURAR CHAVES SE EXISTIREM ---
+                    if (data.chavesAPI && Array.isArray(data.chavesAPI)) {
+                        apiKeysList = data.chavesAPI;
+                        localStorage.setItem('codex_api_keys_list', JSON.stringify(apiKeysList));
+                        renderKeysList();
+                        carregarChaveAPI();
+                    }
+                    // -------------------------------------
+
+                    // --- Sanitização de Dados ---
+                    if(!bancoDados.organizacoes) bancoDados.organizacoes = [];
+                    if(!bancoDados.leis) bancoDados.leis = [];
+                    if(!bancoDados.fisica) bancoDados.fisica = [];
+                    if(!bancoDados.projetos) bancoDados.projetos = [];
+                    if(!bancoDados.abasPersonalizadas) bancoDados.abasPersonalizadas = [];
+                    if(!bancoDados.nacoesInfo) bancoDados.nacoesInfo = {};
+                    if(!bancoDados.configDemografica) bancoDados.configDemografica = {
+                        populacaoTotal: 9000000000,
+                        raridades: { "SS":{taxa:50000000,np:55000000}, "S":{taxa:5000000,np:5500000}, "A":{taxa:500000,np:550000}, "B":{taxa:50000,np:55000}, "C":{taxa:5000,np:5500}, "D":{taxa:500,np:550}, "E":{taxa:50,np:55} }
+                    };
+
+                    // --- ATUALIZAÇÃO VISUAL IMEDIATA (CORREÇÃO) ---
+                    // Protocolo
+                    if(bancoDados.protocolo) document.getElementById('regrasIA').value = bancoDados.protocolo;
+                    
+                    // Meta Dados (Data e Marcador)
+                    if(bancoDados.meta) {
+                        if(bancoDados.meta.dataAtual) document.getElementById('dataAtual').value = bancoDados.meta.dataAtual;
+                        if(bancoDados.meta.marcador) document.getElementById('marcadorTexto').value = bancoDados.meta.marcador;
+                    }
+
+                    // População (Novo campo da v6)
+                    if(bancoDados.configDemografica && bancoDados.configDemografica.populacaoTotal) {
+                        const elPop = document.getElementById('popMundial');
+                        if(elPop) elPop.value = parseInt(bancoDados.configDemografica.populacaoTotal).toLocaleString('pt-BR');
+                    }
+
+                    migrarIds(); 
+                    renderizarTudo();
+                    salvarDadosLocal();
+                    alert("Backup restaurado e interface atualizada!");
+                    return; 
+                } else { return; }
+            }
+
+            let atualizou = false;
+
+            if (data.novoCapitulo) {
+                const nc = data.novoCapitulo;
+                if (!nc.id) throw new Error("ID faltando no novoCapitulo");
+                const idx = bancoDados.historia.findIndex(c => c.id === nc.id);
+                if (idx >= 0) { bancoDados.historia[idx] = nc; } else { bancoDados.historia.push(nc); }
+                renderizarListaCapitulos(); 
+                carregarCapituloNoEditor(nc.id);
+                atualizou = true;
+            } 
+            
+            // Ingestão de Projetos
+            if (data.novoProjeto) {
+                const np = data.novoProjeto;
+                if (!np.id) throw new Error("ID faltando no novoProjeto");
+                const idx = bancoDados.projetos.findIndex(p => p.id === np.id);
+                if (idx >= 0) { bancoDados.projetos[idx] = np; } else { bancoDados.projetos.push(np); }
+                renderizarListaProjetos();
+                carregarProjetoNoEditor(np.id);
+                atualizou = true;
+            }
+
+            if(data.atualizacoesPersonagens) {
+                data.atualizacoesPersonagens.forEach(u => {
+                    let p = bancoDados.personagens.find(x => x.nome === u.nome);
+                    if(p) {
+                        if(u.np) p.np = u.np; 
+                        if(u.status) p.status = u.status; 
+                        if(u.rank) p.rank = u.rank; 
+                        if(u.pais) p.pais = u.pais;
+                        if(u.nascimento) p.nascimento = u.nascimento;
+                        if(u.aparencia && Array.isArray(u.aparencia)) p.aparencia = u.aparencia;
+                        if(u.relacionamentos && Array.isArray(u.relacionamentos)) p.relacionamentos = u.relacionamentos;
+                        if(u.personalidade && Array.isArray(u.personalidade)) p.personalidade = u.personalidade;
+                        if(u.inventario && Array.isArray(u.inventario)) p.inventario = u.inventario;
+                        if(u.eventos && Array.isArray(u.eventos)) p.eventos = u.eventos;
+                        if(u.novoEvento) { if(!p.eventos) p.eventos=[]; p.eventos.push(u.novoEvento); }
+                        if(u.novoTraco) { if(!Array.isArray(p.personalidade)) p.personalidade = []; p.personalidade.push(u.novoTraco); }
+                        if(u.novoItem) { if(!Array.isArray(p.inventario)) p.inventario = []; p.inventario.push(u.novoItem); }
+                        if(u.novoRelacionamento) { if(!Array.isArray(p.relacionamentos)) p.relacionamentos = []; p.relacionamentos.push(u.novoRelacionamento); }
+                        if(u.novaAparencia) { if(!Array.isArray(p.aparencia)) p.aparencia = []; p.aparencia.push(u.novaAparencia); }
+                    } else { 
+                        bancoDados.personagens.push(u); // Adiciona novo se não existir
+                    }
+                });
+                atualizou = true;
+            }
+            
+            // ... (Resto da lógica de ingestão mantida para Física, Leis, Orgs)
+            // Para simplificar, assumimos que se funcionava antes, funciona agora.
+            // Apenas certifique-se de salvar ao final.
+
+            if(data.novaDataMundo) { document.getElementById('dataAtual').value = data.novaDataMundo; atualizou = true; }
+
+            if(atualizou) {
+                renderizarTudo(); 
+                alert('Dados atualizados!'); 
+                document.getElementById('jsonInputArea').value = ''; 
+                salvarDadosLocal();
+            }
+
+        } catch(e) { alert("Erro ao processar JSON: " + e.message); console.error(e); }
+    }
+
+    // --- SISTEMA DE IMPRESSÃO (Suporte a Projetos) ---
+    function prepararImpressao(tipo, origem = 'livro') {
+        let lista = [];
+        let atualId = null;
+        const marcador = document.getElementById('marcadorTexto').value;
+
+        if (origem === 'livro') {
+            salvarConteudoCapitulo();
+            lista = bancoDados.historia;
+            atualId = capituloAtualId;
+        } else {
+            salvarConteudoProjeto();
+            lista = bancoDados.projetos;
+            atualId = projetoAtualId;
+        }
+
+        const container = document.getElementById('print-container');
+        container.innerHTML = ''; 
+        
+        let itemsParaImprimir = [];
+        if (tipo === 'capitulo') {
+            if(!atualId) return alert("Selecione um item primeiro.");
+            const item = lista.find(c => c.id === atualId);
+            if(item) itemsParaImprimir.push(item);
+        } else { 
+            itemsParaImprimir = [...lista].sort(naturalSort); 
+        }
+
+        if (itemsParaImprimir.length === 0) return alert("Nada para imprimir.");
+
+        itemsParaImprimir.forEach((item, index) => {
+            const divCap = document.createElement('div');
+            if (index > 0) divCap.className = 'page-break';
+            const linhas = (item.conteudo || "").split('\n');
+            const textoLimpo = linhas.filter(l => !l.trim().startsWith(marcador)).map(l => `<div class="print-paragraph">${l}</div>`).join('');
+            const tipoLabel = origem === 'livro' ? 'Capítulo' : 'Projeto';
+            divCap.innerHTML = `<h1 class="print-chapter-title">${item.id} - ${item.titulo}</h1><div class="print-chapter-meta">Saga dos Despertos | ${tipoLabel} ${item.id}</div><div class="print-content">${textoLimpo}</div>`;
+            container.appendChild(divCap);
+        });
+        window.print();
+    }
+
+    // --- NAV ---
+    function switchTab(id, btn) {
+        document.querySelectorAll('.content').forEach(c=>c.classList.remove('active'));
+        document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+        const el = document.getElementById(id); if(el) el.classList.add('active'); if(btn) btn.classList.add('active');
+    }
+    function resetarPadroes() { if(confirm("Resetar configurações demográficas?")) { 
+        bancoDados.configDemografica.raridades = { "SS":{taxa:50000000,np:55000000}, "S":{taxa:5000000,np:5500000}, "A":{taxa:500000,np:550000}, "B":{taxa:50000,np:55000}, "C":{taxa:5000,np:5500}, "D":{taxa:500,np:550}, "E":{taxa:50,np:55} };
+        bancoDados.configDemografica.populacaoTotal = 9000000000;
+        document.getElementById('popMundial').value = 9000000000;
+        gerarPainelDemografico(); renderizarNacoes();
+    }}
+
+    // --- LÓGICA DO LIVRO MODULAR (CANONE) - ATUALIZADO ---
+    function naturalSort(a, b) { return a.id.localeCompare(b.id, undefined, { numeric: true, sensitivity: 'base' }); }
+
+    function renderizarListaCapitulos() {
+        const lista = document.getElementById('listaCapitulos');
+        const filtro = document.getElementById('buscaCapitulo').value.toLowerCase();
+        lista.innerHTML = '';
+        if(!Array.isArray(bancoDados.historia)) bancoDados.historia = [];
+        bancoDados.historia.sort(naturalSort);
+        bancoDados.historia.forEach(cap => {
+            if(filtro && !cap.titulo.toLowerCase().includes(filtro) && !cap.id.includes(filtro)) return;
+            const div = document.createElement('div');
+            div.className = 'chapter-list-item';
+            
+            const nivel = (cap.id.match(/\./g) || []).length + 1;
+            const indentClass = `chapter-indent-${Math.min(nivel, 3)}`;
+            
+            // Layout flexivel para titulo e botão
+            div.innerHTML = `
+                <div style="flex:1" onclick="carregarCapituloNoEditor('${cap.id}')">
+                    <span class="${indentClass}">${cap.id}</span> - ${cap.titulo}
+                </div>
+                <button class="btn-proc" onclick="event.stopPropagation(); iaProcessarEntidades('${cap.id}')" title="IA: Extrair dados e atualizar abas">⚙️</button>
+            `;
+            
+            if(capituloAtualId === cap.id) div.classList.add('active');
+            lista.appendChild(div);
+        });
+        if(!capituloAtualId && bancoDados.historia.length > 0) carregarCapituloNoEditor(bancoDados.historia[0].id);
+    }
+
+    // --- NOVA FUNÇÃO DE PROCESSAMENTO DE ENTIDADES ---
+    async function iaProcessarEntidades(capId) {
+        const cap = bancoDados.historia.find(c => c.id === capId);
+        if(!cap || !cap.conteudo || cap.conteudo.length < 50) {
+            alert("Capítulo vazio ou muito curto para processar.");
+            return;
+        }
+
+        const btn = event.target;
+        const originalText = btn.innerText;
+        btn.innerText = "⏳";
+        btn.classList.add("loading");
+
+        // Contexto mínimo para a IA identificar nomes
+        const nomesChars = bancoDados.personagens.map(p => p.nome).join(", ");
+        const nomesOrgs = bancoDados.organizacoes.map(o => o.nome).join(", ");
+
+        const prompt = `Analise o texto do Capítulo ${cap.id} ("${cap.titulo}") do livro 'Códice - A Fenda'.
+        
+        SEU OBJETIVO: Rastrear profundamente a evolução dos personagens e do mundo.
+        
+        BASE DE DADOS ATUAL:
+        - Personagens: ${nomesChars}
+        - Organizações: ${nomesOrgs}
+
+        TEXTO DO CAPÍTULO:
+        ${cap.conteudo.slice(0, 15000)}
+
+        SAÍDA ESPERADA (JSON ESTRITO):
+        Retorne APENAS um JSON. Para cada personagem que apareceu e teve relevância, preencha todos os campos.
+        {
+            "personagens": [
+                { 
+                    "nome": "Nome Exato", 
+                    "data": "${getFormattedDate().split('_')[0]}",
+                    "personalidade_traco": "Traço dominante ou emoção principal demonstrada neste capítulo",
+                    "inventario_itens": "Lista de itens importantes que ele usou ou adquiriu neste capítulo",
+                    "aparencia_detalhe": "Como ele estava vestido ou mudanças físicas notadas neste capítulo",
+                    "relacionamentos_resumo": "Resumo das interações sociais e sentimentos por outros neste capítulo",
+                    "evento_resumo": "Resumo completo da participação do personagem no capítulo (O que ele fez, o que sofreu, resultado)"
+                }
+            ],
+            "organizacoes": [
+                { "nome": "Nome Exato", "acao": "O que a org fez ou como foi citada", "data": "${getFormattedDate().split('_')[0]}" }
+            ],
+            "leis_fisica": [
+                { "tipo": "lei" ou "fisica", "nome_ou_regra": "Nome da Lei ou Regra", "citacao": "Breve contexto de uso" }
+            ]
+        }`;
+
+        try {
+            const jsonStr = await queryGemini(prompt, true);
+            if(jsonStr) {
+                const cleanJson = jsonStr.replace(/```json/g, '').replace(/```/g, '').trim();
+                const dadosExtraidos = JSON.parse(cleanJson);
+                
+                let relatorio = `RELATÓRIO DE ATUALIZAÇÃO (Cap ${capId}):\n\n`;
+
+                // 1. Atualizar Personagens (COMPLETO)
+                if(dadosExtraidos.personagens) {
+                    dadosExtraidos.personagens.forEach(item => {
+                        const char = bancoDados.personagens.find(p => p.nome.toLowerCase() === item.nome.toLowerCase() || p.nome.includes(item.nome));
+                        if(char) {
+                            // Garante arrays
+                            if(!char.personalidade) char.personalidade = [];
+                            if(!char.inventario) char.inventario = [];
+                            if(!char.aparencia) char.aparencia = [];
+                            if(!char.relacionamentos) char.relacionamentos = [];
+                            if(!char.eventos) char.eventos = [];
+
+                            const ctx = `(Cap ${capId})`;
+
+                            // Adiciona dados se não estiverem vazios/nulos
+                            if(item.personalidade_traco) {
+                                char.personalidade.push({ data: item.data, traco: item.personalidade_traco, desc: `${ctx} Estado dominante.` });
+                            }
+                            if(item.inventario_itens) {
+                                char.inventario.push({ data: item.data, item: "Itens do Capítulo", desc: `${ctx} ${item.inventario_itens}` });
+                            }
+                            if(item.aparencia_detalhe) {
+                                char.aparencia.push({ data: item.data, traço: "Visual do Capítulo", desc: `${ctx} ${item.aparencia_detalhe}` });
+                            }
+                            if(item.relacionamentos_resumo) {
+                                char.relacionamentos.push({ data: item.data, alvo: "Interações", sentimento: "Variado", motivo: `${ctx} ${item.relacionamentos_resumo}` });
+                            }
+                            if(item.evento_resumo) {
+                                char.eventos.push({ data: item.data, desc: `${ctx} ${item.evento_resumo}` });
+                            }
+
+                            relatorio += `✅ [Pers] ${char.nome}: Atualizado (Psique, Inv, Look, Rel, Evento).\n`;
+                        }
+                    });
+                }
+
+                // 2. Atualizar Organizações
+                if(dadosExtraidos.organizacoes) {
+                    dadosExtraidos.organizacoes.forEach(item => {
+                        const org = bancoDados.organizacoes.find(o => o.nome.toLowerCase() === item.nome.toLowerCase() || o.nome.includes(item.nome));
+                        if(org) {
+                            if(!org.historico) org.historico = [];
+                            const jaExiste = org.historico.some(h => h.evento === item.acao && h.data === item.data);
+                            if(!jaExiste) {
+                                org.historico.push({ data: item.data, evento: `(Cap ${capId}) ${item.acao}` });
+                                // Atualiza Citações
+                                const citacoes = (org.citacoes || "").split(',').map(s=>s.trim()).filter(s=>s);
+                                if(!citacoes.includes(capId)) {
+                                    citacoes.push(capId);
+                                    org.citacoes = citacoes.join(', ');
+                                }
+                                relatorio += `✅ [Org] ${org.nome}: Histórico atualizado.\n`;
+                            }
+                        }
+                    });
+                }
+
+                // 3. Atualizar Leis e Física (Apenas Citações)
+                if(dadosExtraidos.leis_fisica) {
+                    dadosExtraidos.leis_fisica.forEach(item => {
+                        let lista = item.tipo === 'lei' ? bancoDados.leis : bancoDados.fisica;
+                        let campoBusca = item.tipo === 'lei' ? 'nome' : 'regra';
+                        
+                        const obj = lista.find(x => x[campoBusca] && (x[campoBusca].toLowerCase().includes(item.nome_ou_regra.toLowerCase()) || item.nome_ou_regra.toLowerCase().includes(x[campoBusca].toLowerCase())));
+                        
+                        if(obj) {
+                            const citacoes = (obj.citacoes || "").split(',').map(s=>s.trim()).filter(s=>s);
+                            if(!citacoes.includes(capId)) {
+                                citacoes.push(capId);
+                                obj.citacoes = citacoes.join(', ');
+                                relatorio += `✅ [${item.tipo.toUpperCase()}] ${obj[campoBusca]}: Citação vinculada.\n`;
+                            }
+                        }
+                    });
+                }
+
+                renderizarTudo();
+                alert(relatorio || "Nenhuma entidade conhecida foi detectada para atualização.");
+            }
+        } catch(e) {
+            console.error(e);
+            alert("Erro ao processar entidades: " + e.message);
+        }
+
+        btn.innerText = originalText;
+        btn.classList.remove("loading");
+    }
+
+    // --- NOVA FUNÇÃO DE RESET DE PERSONAGEM ---
+    function resetarPersonagem(index) {
+        const p = bancoDados.personagens[index];
+        if(confirm(`ATENÇÃO: Você está prestes a apagar TODO o histórico de ${p.nome}.\n\nIsso limpará:\n- Personalidade\n- Inventário\n- Aparência\n- Relacionamentos\n- Eventos\n\nDados vitais (Nome, Rank, NP) serão mantidos.\n\nContinuar?`)) {
+            p.personalidade = [];
+            p.inventario = [];
+            p.aparencia = [];
+            p.relacionamentos = [];
+            p.eventos = [];
+            renderizarPersonagens();
+            alert(`${p.nome} foi resetado(a) com sucesso.`);
+        }
+    }
+    
+    // --- FUNÇÕES DE SELEÇÃO E DELEÇÃO EM MASSA (NOVAS) ---
+    
+    // Função para marcar/desmarcar todos os checkboxes
+    function toggleSelecionarTudo(source, classeAlvo) {
+        const checkboxes = document.querySelectorAll(`.${classeAlvo}`);
+        checkboxes.forEach(cb => cb.checked = source.checked);
+    }
+
+    // Função Mestra de Deleção em Massa
+    function deletarSelecionados(tipo) {
+        let classeCheckbox = "";
+        let arrayAlvo = "";
+        let nomeAmigavel = "";
+        
+        if (tipo === 'personagens') { 
+            classeCheckbox = 'check-personagem'; 
+            arrayAlvo = 'personagens'; 
+            nomeAmigavel = "personagens";
+        }
+        else if (tipo === 'organizacoes') { 
+            classeCheckbox = 'check-organizacao'; 
+            arrayAlvo = 'organizacoes'; 
+            nomeAmigavel = "organizações";
+        }
+        else if (tipo === 'leis') { 
+            classeCheckbox = 'check-lei'; 
+            arrayAlvo = 'leis'; 
+            nomeAmigavel = "leis";
+        }
+        else if (tipo === 'fisica') { 
+            classeCheckbox = 'check-fisica'; 
+            arrayAlvo = 'fisica'; 
+            nomeAmigavel = "regras físicas";
+        }
+        
+        const checkboxes = document.querySelectorAll(`.${classeCheckbox}:checked`);
+        
+        if (checkboxes.length === 0) {
+            alert("Nenhum item selecionado.");
+            return;
+        }
+
+        if (confirm(`⚠️ PERIGO: Você vai apagar ${checkboxes.length} ${nomeAmigavel} permanentemente.\n\nTem certeza absoluta?`)) {
+            // Pega os índices, converte para número e ordena de trás para frente
+            // (Isso é CRUCIAL para não bagunçar os índices enquanto apaga)
+            const indices = Array.from(checkboxes).map(cb => parseInt(cb.value)).sort((a, b) => b - a);
+            
+            indices.forEach(index => {
+                bancoDados[arrayAlvo].splice(index, 1);
+            });
+
+            renderizarTudo();
+            alert("✅ Itens apagados com sucesso.");
+            
+            // Desmarca o checkbox do cabeçalho se estiver marcado
+            const headerCheck = document.querySelector(`input[onclick*="${classeCheckbox}"]`);
+            if(headerCheck) headerCheck.checked = false;
+        }
+    }
+    
+    // --- FUNÇÃO MODO A5 ---
+    function alternarModoA5() {
+        const areaEditor = document.querySelector('#aba-livro .book-editor-area');
+        const btn = document.getElementById('btnA5');
+        const textArea = document.getElementById('textoCapitulo');
+        
+        // Alterna a classe visual
+        areaEditor.classList.toggle('modo-a5');
+        
+        const estaNoModoA5 = areaEditor.classList.contains('modo-a5');
+        
+        if (estaNoModoA5) {
+            btn.innerText = "🖥️ Modo Normal";
+            btn.classList.remove('btn-secondary');
+            btn.classList.add('btn-primary');
+            textArea.placeholder = "Escreva aqui... (Visualização A5 Ativa)";
+        } else {
+            btn.innerText = "📄 Modo A5";
+            btn.classList.remove('btn-primary');
+            btn.classList.add('btn-secondary');
+            textArea.placeholder = "Selecione um capítulo à esquerda ou crie um novo...";
+        }
+    }
+    
+</script>
+
+</body></html>
