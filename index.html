@@ -2487,7 +2487,7 @@ ${textoAtual.slice(-6000)}`;
             const linhas = (item.conteudo || "").split('\n');
             const textoLimpo = linhas.filter(l => !l.trim().startsWith(marcador)).map(l => `<div class="print-paragraph">${l}</div>`).join('');
             const tipoLabel = origem === 'livro' ? 'Capítulo' : 'Projeto';
-            divCap.innerHTML = `<h1 class="print-chapter-title">${item.id} - ${item.titulo}</h1><div class="print-chapter-meta">Saga dos Despertos | ${tipoLabel} ${item.id}</div><div class="print-content">${textoLimpo}</div>`;
+            divCap.innerHTML = `<h1 class="print-chapter-title">${item.id} - ${item.titulo}</h1><div class="print-chapter-meta">Códice | ${tipoLabel} ${item.id}</div><div class="print-content">${textoLimpo}</div>`;
             container.appendChild(divCap);
         });
         window.print();
