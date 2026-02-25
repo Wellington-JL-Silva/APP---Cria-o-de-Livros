@@ -426,6 +426,19 @@
                 <button class="btn btn-primary" onclick="novoPersonagem()">+ Novo</button>
             </div>
         </div>
+
+        <!-- NOVO: GERENCIADOR DE RANKS DINÂMICO -->
+        <div style="background: var(--bg-panel); padding: 15px; border-bottom: 2px solid var(--border-color); margin-bottom: 20px;">
+            <label style="font-weight: bold; font-size: 1.1em; color: var(--accent);">🎖️ Gerenciador de Ranks (Tiers):</label>
+            <div id="painelGerenciadorRanks" style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; margin-bottom: 10px;"></div>
+            <div>
+                <input type="text" id="novoRankNome" placeholder="Novo Rank..." style="width: 150px; display: inline-block;">
+                <input type="color" id="novoRankCor" value="#34495e" style="width: 40px; height: 36px; padding: 0; display: inline-block; vertical-align: middle; border: none; cursor: pointer;">
+                <button class="btn btn-sm btn-success" onclick="adicionarRankConfig()">+ Adicionar</button>
+                <span style="font-size: 0.85em; color: var(--text); opacity: 0.7; margin-left: 10px;">A ordem dos ranks aqui define a ordenação na tabela.</span>
+            </div>
+        </div>
+
         <div class="table-wrapper">
             <table id="tabelaPersonagens">
                 <thead>
@@ -1050,7 +1063,7 @@ ${textoAtual.slice(-6000)}`;
         const prompt = `Gere um personagem RPG para o universo 'Códice - A Fenda' (Mundo moderno com superpoderes).
         ${context}
         Regras:
-        - Ranks: E, D, C, B, A, S, SS, SSS.
+        - Ranks: ${bancoDados.configRanks.map(r => r.nome).join(', ')}.
         - NP (Nível de Poder): E(~50) a SSS(>100.000.000).
         - Retorne APENAS um JSON válido (sem markdown) com esta estrutura:
         {
@@ -1141,8 +1154,6 @@ ${textoAtual.slice(-6000)}`;
 
     // --- DADOS DE CONFIGURAÇÃO IMUTÁVEIS ---
     const POPULATION_DATA = { "Índia": 0.17811, "China": 0.17400, "Estados Unidos": 0.04172, "Indonésia": 0.03534, "Paquistão": 0.03024, "Nigéria": 0.02891, "Brasil": 0.02670, "Bangladesh": 0.02133, "Rússia": 0.01758, "México": 0.01590, "Etiópia": 0.01606, "Japão": 0.01500, "Filipinas": 0.01454, "Egito": 0.01398, "República Democrática do Congo": 0.01287, "Vietnã": 0.01224, "Irã": 0.01089, "Turquia": 0.01054, "Alemanha": 0.01017, "Tanzânia": 0.00844, "Reino Unido": 0.00830, "Tailândia": 0.00877, "França": 0.00792, "África do Sul": 0.00745, "Itália": 0.00720, "Myanmar": 0.00666, "Quênia": 0.00673, "Colômbia": 0.00643, "Coreia do Sul": 0.00632, "Uganda": 0.00618, "Sudão": 0.00603, "Espanha": 0.00580, "Argentina": 0.00562, "Argélia": 0.00557, "Iraque": 0.00556, "Afeganistão": 0.00544, "Canadá": 0.00477, "Polônia": 0.00459, "Marrocos": 0.00467, "Arábia Saudita": 0.00458, "Ucrânia": 0.00449, "Angola": 0.00448, "Uzbequistão": 0.00436, "Iêmen": 0.00421, "Peru": 0.00419, "Malásia": 0.00419, "Gana": 0.00417, "Moçambique": 0.00414, "Nepal": 0.00381, "Madagascar": 0.00370, "Camarões": 0.00359, "Costa do Marfim": 0.00361, "Venezuela": 0.00355, "Coreia do Norte": 0.00320, "Austrália": 0.00328, "Níger": 0.00332, "Taiwan": 0.00292, "Mali": 0.00284, "Burkina Faso": 0.00284, "Síria": 0.00284, "Sri Lanka": 0.00271, "Malawi": 0.00256, "Zâmbia": 0.00251, "Cazaquistão": 0.00242, "Chile": 0.00240, "Romênia": 0.00232, "Chade": 0.00223, "Somália": 0.00221, "Equador": 0.00222, "Guatemala": 0.00221, "Senegal": 0.00217, "Países Baixos": 0.00215, "Camboja": 0.00207, "Zimbábue": 0.00204, "Guiné": 0.00173, "Ruanda": 0.00172, "Benim": 0.00167, "Burundi": 0.00160, "Bolívia": 0.00151, "Tunísia": 0.00151, "Haiti": 0.00143, "Bélgica": 0.00143, "República Dominicana": 0.00138, "Jordânia": 0.00138, "Cuba": 0.00137, "Suécia": 0.00130, "Honduras": 0.00129, "República Tcheca": 0.00128, "Azerbaijão": 0.00127, "Grécia": 0.00126, "Papua-Nova Guiné": 0.00126, "Portugal": 0.00125, "Tajiquistão": 0.00124, "Hungria": 0.00118, "Emirados Árabes Unidos": 0.00116, "Bielorrússia": 0.00116, "Áustria": 0.00109, "Suíça": 0.00108, "Israel": 0.00114, "Togo": 0.00111, "Serra Leoa": 0.00107, "Laos": 0.00093, "Hong Kong": 0.00092, "Nicarágua": 0.00086, "Sérvia": 0.00087, "Paraguai": 0.00084, "Líbia": 0.00083, "Quirguistão": 0.00082, "Bulgária": 0.00083, "Turcomenistão": 0.00080, "El Salvador": 0.00078, "Singapura": 0.00073, "República do Congo": 0.00073, "Dinamarca": 0.00072, "Finlândia": 0.00068, "Eslováquia": 0.00067, "Noruega": 0.00067, "Estado da Palestina": 0.00067, "Libéria": 0.00066, "Nova Zelândia": 0.00064, "Costa Rica": 0.00064, "Irlanda": 0.00062, "Mauritânia": 0.00059, "Omã": 0.00057, "Panamá": 0.00055, "Kuwait": 0.00053, "Croácia": 0.00049, "Geórgia": 0.00045, "Mongólia": 0.00042, "Uruguai": 0.00042, "Bósnia e Herzegovina": 0.00039, "Albânia": 0.00035, "Jamaica": 0.00035, "Armênia": 0.00034, "Catar": 0.00033, "Lituânia": 0.00033, "Gâmbia": 0.00034, "Botsuana": 0.00033, "Namíbia": 0.00031, "Gabão": 0.00030, "Lesoto": 0.00028, "Guiné-Bissau": 0.00026, "Eslovênia": 0.00026, "Macedônia do Norte": 0.00025, "Letônia": 0.00022, "Guiné Equatorial": 0.00021, "Trinidad e Tobago": 0.00019, "Bahrein": 0.00018, "Timor-Leste": 0.00017, "Estônia": 0.00016, "Maurício": 0.00015, "Chipre": 0.00015, "Eswatini": 0.00015, "Djibouti": 0.00014, "Fiji": 0.00011, "Comores": 0.00011, "Guiana": 0.00010, "Butão": 0.00010, "Ilhas Salomão": 0.00009, "Luxemburgo": 0.00008, "Montenegro": 0.00008, "Suriname": 0.00008, "Cabo Verde": 0.00007, "Malta": 0.00007, "Maldivas": 0.00006, "Brunei": 0.00006, "Bahamas": 0.00005, "Belize": 0.00005, "Islândia": 0.00005, "Vanuatu": 0.00004, "Barbados": 0.00003, "São Tomé e Príncipe": 0.00003, "Samoa": 0.00003, "Santa Lúcia": 0.00002, "Kiribati": 0.00002, "Granada": 0.00002, "Tonga": 0.00001, "Seicheles": 0.00001, "São Vicente e Granadinas": 0.00001, "Antígua e Barbuda": 0.00001, "Andorra": 0.00001, "Dominica": 0.00001, "São Cristóvão e Névis": 0.00001, "Ilhas Marshall": 0.00001 };
-
-    const RANKS_OPTIONS = ["Não Desperto", "E", "D", "C", "B", "A", "S", "SS", "SSS"];
     
     // --- PROTOCOLO PADRÃO ---
     const PROTOCOLO_PADRAO = `Aqui deve ser descrito o objetivo do livro e um protocolo que pode evoluir conforme o livro é escrito.`;
@@ -1160,6 +1171,7 @@ ${textoAtual.slice(-6000)}`;
             populacaoTotal: 9000000000,
             raridades: { "SS": { taxa: 50000000, np: 55000000 }, "S":  { taxa: 5000000,  np: 5500000 }, "A":  { taxa: 500000,   np: 550000 }, "B":  { taxa: 50000,    np: 55000 }, "C":  { taxa: 5000,     np: 5500 }, "D":  { taxa: 500,      np: 550 }, "E":  { taxa: 50,       np: 55 } }
         },
+        configRanks: [], // NOVO GERENCIADOR DE RANKS
         abasPersonalizadas: [],
         meta: { dataAtual: "", marcador: "|||" }
     };
@@ -1276,6 +1288,21 @@ ${textoAtual.slice(-6000)}`;
             if (!bancoDados.fisica) bancoDados.fisica = [];
             if (!bancoDados.projetos) bancoDados.projetos = [];
             
+            // Injeção de Ranks Base caso não existam
+            if (!bancoDados.configRanks || bancoDados.configRanks.length === 0) {
+                bancoDados.configRanks = [
+                    { nome: "Não Desperto", cor: "#95a5a6" },
+                    { nome: "E", cor: "#7f8c8d" },
+                    { nome: "D", cor: "#bdc3c7" },
+                    { nome: "C", cor: "#1abc9c" },
+                    { nome: "B", cor: "#2980b9" },
+                    { nome: "A", cor: "#f39c12" },
+                    { nome: "S", cor: "#d35400" },
+                    { nome: "SS", cor: "#c0392b" },
+                    { nome: "SSS", cor: "#8e44ad" }
+                ];
+            }
+            
             if(bancoDados.protocolo) document.getElementById('regrasIA').value = bancoDados.protocolo;
             
             // Carregar população
@@ -1291,6 +1318,7 @@ ${textoAtual.slice(-6000)}`;
 
     function renderizarTudo() {
         renderizarAbasPersonalizadas();
+        renderizarGerenciadorRanks();
         renderizarPersonagens();
         renderizarOrganizacoes();
         renderizarElite(); 
@@ -1301,6 +1329,54 @@ ${textoAtual.slice(-6000)}`;
         renderizarListaCapitulos();
         renderizarListaProjetos(); // Renderizar Projetos
     }
+
+    // --- LÓGICA GERENCIADOR DE RANKS ---
+    function renderizarGerenciadorRanks() {
+        const painel = document.getElementById('painelGerenciadorRanks');
+        if (!painel) return;
+        painel.innerHTML = '';
+        bancoDados.configRanks.forEach((rank, idx) => {
+            painel.innerHTML += `
+                <div style="display: flex; align-items: center; gap: 5px; background: rgba(0,0,0,0.05); padding: 5px 10px; border-radius: 4px; border: 1px solid var(--border-color);">
+                    <span style="font-weight: bold; color: ${rank.cor}; min-width: 30px; text-align: center;">${rank.nome}</span>
+                    <input type="color" value="${rank.cor}" onchange="atualizarCorRankConfig(${idx}, this.value)" style="width: 25px; height: 25px; padding: 0; border: none; cursor: pointer;">
+                    <button class="btn-del-mini" style="float:none; margin-left:0;" onclick="deletarRankConfig(${idx})">x</button>
+                </div>
+            `;
+        });
+    }
+
+    function adicionarRankConfig() {
+        const nome = document.getElementById('novoRankNome').value.trim();
+        const cor = document.getElementById('novoRankCor').value;
+        if (!nome) return;
+        if (bancoDados.configRanks.find(r => r.nome.toUpperCase() === nome.toUpperCase())) {
+            alert("Rank já existe na lista!");
+            return;
+        }
+        bancoDados.configRanks.push({ nome: nome, cor: cor });
+        document.getElementById('novoRankNome').value = '';
+        renderizarGerenciadorRanks();
+        renderizarPersonagens();
+        salvarDadosLocal();
+    }
+
+    function atualizarCorRankConfig(idx, cor) {
+        bancoDados.configRanks[idx].cor = cor;
+        renderizarGerenciadorRanks();
+        renderizarPersonagens();
+        salvarDadosLocal();
+    }
+
+    function deletarRankConfig(idx) {
+        if (confirm("Deseja apagar este Rank? Personagens que já possuem este rank o manterão como texto, mas a cor personalizada será perdida.")) {
+            bancoDados.configRanks.splice(idx, 1);
+            renderizarGerenciadorRanks();
+            renderizarPersonagens();
+            salvarDadosLocal();
+        }
+    }
+
 
     // --- FUNÇÕES DE SUPORTE ---
     function atualizarIdades() {
@@ -1698,10 +1774,13 @@ ${textoAtual.slice(-6000)}`;
                 return (numA - numB) * estadoOrdenacao.direcao;
             }
             
-            // 4. ORDENAR POR RANK
+            // 4. ORDENAR POR RANK (DINÂMICO)
             if (coluna === 'rank') {
-                const indexA = RANKS_OPTIONS.indexOf(valA);
-                const indexB = RANKS_OPTIONS.indexOf(valB);
+                const rankList = bancoDados.configRanks.map(r => r.nome);
+                let indexA = rankList.indexOf(valA);
+                let indexB = rankList.indexOf(valB);
+                if (indexA === -1) indexA = 999;
+                if (indexB === -1) indexB = 999;
                 return (indexA - indexB) * estadoOrdenacao.direcao;
             }
 
@@ -1808,16 +1887,20 @@ ${textoAtual.slice(-6000)}`;
                 if(rev[1]) psiqueHTML += `<div class="psyche-recent"><b>Influência Recente:</b> ${rev[1].traco}</div>`;
             } else { psiqueHTML = '<i>Sem registros.</i>'; }
 
-            // Lógica de Rank e Badge
+            // Lógica de Rank Dinâmico
+            let rankConfig = bancoDados.configRanks.find(r => r.nome === p.rank);
+            let corRank = rankConfig ? rankConfig.cor : '#95a5a6';
             let rankClass = 'badge';
-            const r = (p.rank || '').trim().toUpperCase();
-            if(r === 'SSS') rankClass += ' badge-sss';
-            else if(r === 'SS') rankClass += ' badge-ss';
-            else if(r === 'S') rankClass += ' badge-s';
-            else if(r === 'A') rankClass += ' badge-a';
-            else if(r === 'B') rankClass += ' badge-b';
+            let rankStyle = `background-color: ${corRank};`;
             
-            let rankOptions = RANKS_OPTIONS.map(opt => `<option value="${opt}" ${opt === p.rank ? 'selected' : ''}>${opt}</option>`).join('');
+            if (p.rank === 'SSS' || (rankConfig && rankConfig.nome === 'SSS')) {
+                rankStyle += ` box-shadow: 0 0 8px ${corRank}; border: 1px solid #fff;`;
+            }
+            
+            let rankOptions = bancoDados.configRanks.map(opt => `<option value="${opt.nome}" ${opt.nome === p.rank ? 'selected' : ''}>${opt.nome}</option>`).join('');
+            if (p.rank && !rankConfig) {
+                rankOptions += `<option value="${p.rank}" selected>${p.rank} (Descontinuado)</option>`;
+            }
 
             // Lógica de Idade
             let displayIdade = '-';
@@ -1826,7 +1909,7 @@ ${textoAtual.slice(-6000)}`;
                 let idade = hoje.getFullYear() - nasc.getFullYear();
                 const m = hoje.getMonth() - nasc.getMonth();
                 if (m < 0 || (m === 0 && hoje.getDate() < nasc.getDate())) { idade--; }
-                if (r === 'SSS' && idade > 25) displayIdade = `25 (${idade})`;
+                if (p.rank === 'SSS' && idade > 25) displayIdade = `25 (${idade})`;
                 else displayIdade = idade;
             }
             
@@ -1841,7 +1924,7 @@ ${textoAtual.slice(-6000)}`;
                     <td contenteditable="true" class="editable" onblur="updChar(${index}, 'pais', this.innerText)">${p.pais}</td>
                     <td>
                         <div style="display:flex; align-items:center;">
-                            <span id="rank-badge-${index}" class="${rankClass}">${p.rank || '-'}</span>
+                            <span id="rank-badge-${index}" class="${rankClass}" style="${rankStyle}">${p.rank || '-'}</span>
                             <select style="width:auto; flex:1;" onchange="updChar(${index}, 'rank', this.value)">${rankOptions}</select>
                         </div>
                     </td>
@@ -2230,18 +2313,22 @@ ${textoAtual.slice(-6000)}`;
     function updChar(i, field, val) {
         if(field === 'np') val = val.replace(/\./g, '');
         bancoDados.personagens[i][field] = val;
+        
         if (field === 'rank') {
             const badge = document.getElementById(`rank-badge-${i}`);
             if(badge) {
                 badge.innerText = val;
-                let newClass = 'badge';
-                const r = val.trim().toUpperCase();
-                if(r === 'SSS') newClass += ' badge-sss';
-                else if(r === 'SS') newClass += ' badge-ss';
-                else if(r === 'S') newClass += ' badge-s';
-                else if(r === 'A') newClass += ' badge-a';
-                else if(r === 'B') newClass += ' badge-b';
-                badge.className = newClass;
+                let rankConfig = bancoDados.configRanks.find(r => r.nome === val);
+                let corRank = rankConfig ? rankConfig.cor : '#95a5a6';
+                badge.className = 'badge';
+                badge.style.backgroundColor = corRank;
+                if (val === 'SSS') {
+                    badge.style.boxShadow = `0 0 8px ${corRank}`;
+                    badge.style.border = '1px solid #fff';
+                } else {
+                    badge.style.boxShadow = 'none';
+                    badge.style.border = 'none';
+                }
             }
             renderizarElite();
             renderizarNacoes();
@@ -2355,6 +2442,13 @@ ${textoAtual.slice(-6000)}`;
                     if(!bancoDados.leis) bancoDados.leis = [];
                     if(!bancoDados.fisica) bancoDados.fisica = [];
                     if(!bancoDados.projetos) bancoDados.projetos = [];
+                    if(!bancoDados.configRanks || bancoDados.configRanks.length === 0) {
+                        bancoDados.configRanks = [
+                            { nome: "Não Desperto", cor: "#95a5a6" }, { nome: "E", cor: "#7f8c8d" }, { nome: "D", cor: "#bdc3c7" }, 
+                            { nome: "C", cor: "#1abc9c" }, { nome: "B", cor: "#2980b9" }, { nome: "A", cor: "#f39c12" }, 
+                            { nome: "S", cor: "#d35400" }, { nome: "SS", cor: "#c0392b" }, { nome: "SSS", cor: "#8e44ad" }
+                        ];
+                    }
                     if(!bancoDados.abasPersonalizadas) bancoDados.abasPersonalizadas = [];
                     if(!bancoDados.nacoesInfo) bancoDados.nacoesInfo = {};
                     if(!bancoDados.configDemografica) bancoDados.configDemografica = {
