@@ -230,6 +230,18 @@
         box-sizing: content-box;
     }
     
+    /* MODAL GERENCIADOR DE DADOS DA ABA */
+    #aba-json-modal {
+        position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0,0,0,0.7); z-index: 3000;
+        display: none; align-items: center; justify-content: center;
+    }
+    .aba-json-box {
+        background: var(--bg-panel); width: 90%; max-width: 800px; padding: 20px; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+        display: flex; flex-direction: column; gap: 15px; border: 1px solid var(--border-color);
+    }
+    .aba-json-box textarea { height: 400px; font-family: monospace; font-size: 0.9em; background: #1e1e1e; color: #00ff00; border: 1px solid #555; width: 100%; resize: vertical; padding: 10px; border-radius: 4px; }
+    [data-theme="light"] .aba-json-box textarea { background: #f4f4f4; color: #333; }
 </style>
 </head>
 <body>
@@ -420,7 +432,7 @@
             <h2>Personagens (Perfil Profundo)</h2>
             <div>
                 <button class="btn btn-ai" onclick="iaGerarPersonagem()" title="Criar NPC automaticamente">✨ IA: Gerar NPC</button>
-                <button class="btn btn-warning" onclick="baixarJSONAba('personagens')">💾 JSON Aba</button>
+                <button class="btn btn-warning" onclick="abrirGerenciadorDadosAba('personagens')">⚙️ Gerenciar Dados</button>
                 <button class="btn btn-secondary" onclick="baixarTabela('tabelaPersonagens', 'Personagens')">📊 Baixar Tabela</button>
                 <button class="btn btn-danger" onclick="deletarSelecionados('personagens')" title="Apagar marcados">🗑️ Massa</button>
                 <button class="btn btn-primary" onclick="novoPersonagem()">+ Novo</button>
@@ -470,7 +482,7 @@
             <h2>Organizações &amp; Instituições</h2>
             <div>
                 <button class="btn btn-ai" onclick="iaGerarOrganizacao()" title="Criar Organização automaticamente">✨ IA: Gerar Org</button>
-                <button class="btn btn-warning" onclick="baixarJSONAba('organizacoes')">💾 JSON Aba</button>
+                <button class="btn btn-warning" onclick="abrirGerenciadorDadosAba('organizacoes')">⚙️ Gerenciar Dados</button>
                 <button class="btn btn-secondary" onclick="baixarTabela('tabelaOrgs', 'Organizacoes')">📊 Baixar Tabela</button>
                 <button class="btn btn-primary" onclick="novaOrganizacao()">+ Nova Org</button>
             </div>
@@ -500,7 +512,7 @@
         <div class="header-row">
             <h2>A Elite Global (Rank SSS)</h2>
             <div>
-                <button class="btn btn-warning" onclick="baixarJSONAba('personagens')">💾 JSON Aba (Personagens)</button>
+                <button class="btn btn-warning" onclick="abrirGerenciadorDadosAba('personagens')">⚙️ Gerenciar Dados</button>
                 <button class="btn btn-secondary" onclick="baixarTabela('tabelaElite', 'Elite_SSS')">📊 Baixar Tabela</button>
             </div>
         </div>
@@ -528,7 +540,7 @@
         <div class="header-row">
             <h2>Constituição SSS &amp; Código Penal</h2>
             <div>
-                <button class="btn btn-warning" onclick="baixarJSONAba('leis')">💾 JSON Aba</button>
+                <button class="btn btn-warning" onclick="abrirGerenciadorDadosAba('leis')">⚙️ Gerenciar Dados</button>
                 <button class="btn btn-secondary" onclick="baixarTabela('tabelaLeis', 'Leis')">📊 Baixar Tabela</button>
                 <button class="btn btn-primary" onclick="novaLei()">+ Lei</button>
             </div>
@@ -556,7 +568,7 @@
         <div class="header-row">
             <h2>Física do Mundo</h2>
             <div>
-                <button class="btn btn-warning" onclick="baixarJSONAba('fisica')">💾 JSON Aba</button>
+                <button class="btn btn-warning" onclick="abrirGerenciadorDadosAba('fisica')">⚙️ Gerenciar Dados</button>
                 <button class="btn btn-secondary" onclick="baixarTabela('tabelaFisica', 'Fisica_Regras')">📊 Baixar Tabela</button>
                 <button class="btn btn-primary" onclick="novaRegraFisica()">+ Regra</button>
             </div>
@@ -583,7 +595,7 @@
         <div class="header-row">
             <h2>Geopolítica &amp; Demografia</h2>
             <div>
-                <button class="btn btn-warning" onclick="baixarJSONAba('config')">💾 JSON Aba</button>
+                <button class="btn btn-warning" onclick="abrirGerenciadorDadosAba('config')">⚙️ Gerenciar Dados</button>
                 <button class="btn btn-secondary" onclick="baixarTabela('tabelaNacoes', 'Geopolitica')">📊 Baixar Tabela</button>
                 <button class="btn btn-secondary" onclick="resetarPadroes()">Restaurar Padrões</button>
             </div>
@@ -622,11 +634,103 @@
     </div>
 </div>
 
+<!-- MODAL GERENCIADOR DE DADOS DA ABA -->
+<div id="aba-json-modal">
+    <div class="aba-json-box">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <h3 style="margin:0; color:var(--accent);">⚙️ Gerenciador de Dados (JSON)</h3>
+            <button class="btn btn-danger btn-sm" onclick="fecharGerenciadorDadosAba()">X</button>
+        </div>
+        <p style="font-size:0.85em; opacity:0.8; margin:0;">Edite o JSON diretamente, cole novos dados ou faça o download/upload específico para esta aba.</p>
+        <textarea id="aba-json-area" spellcheck="false"></textarea>
+        <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end;">
+            <button class="btn btn-secondary" onclick="copiarJsonAba()">📋 Copiar</button>
+            <button class="btn btn-secondary" onclick="colarJsonAba()">📋 Colar</button>
+            <div style="width: 1px; background: var(--border-color); margin: 0 5px;"></div>
+            <button class="btn btn-info" onclick="document.getElementById('uploadAbaJsonBtn').click()">📂 Carregar Arquivo</button>
+            <button class="btn btn-warning" onclick="baixarJsonAbaModal()">💾 Baixar Arquivo</button>
+            <button class="btn btn-success" onclick="aplicarJsonAba()">✅ Aplicar JSON</button>
+            <input type="file" id="uploadAbaJsonBtn" accept=".json" style="display:none" onchange="carregarJsonArquivoAba(this)">
+        </div>
+    </div>
+</div>
+
 <div id="dynamic-contents"></div>
 
 <script id="dados-injetados"></script>
 
 <script>
+    // --- LÓGICA DO GERENCIADOR DE DADOS DA ABA (JSON) ---
+    let abaAtualGerenciamento = null;
+
+    function abrirGerenciadorDadosAba(key) {
+        abaAtualGerenciamento = key;
+        let data = key === 'config' ? bancoDados.configDemografica : bancoDados[key];
+        if (!data) data = []; 
+        document.getElementById('aba-json-area').value = JSON.stringify(data, null, 2);
+        document.getElementById('aba-json-modal').style.display = 'flex';
+    }
+
+    function fecharGerenciadorDadosAba() {
+        document.getElementById('aba-json-modal').style.display = 'none';
+        abaAtualGerenciamento = null;
+    }
+
+    function copiarJsonAba() {
+        const text = document.getElementById('aba-json-area').value;
+        navigator.clipboard.writeText(text).then(() => alert('JSON Copiado!'));
+    }
+
+    function colarJsonAba() {
+        navigator.clipboard.readText().then(text => {
+            document.getElementById('aba-json-area').value = text;
+        }).catch(err => alert('Erro ao colar: ' + err));
+    }
+
+    function baixarJsonAbaModal() {
+        if (!abaAtualGerenciamento) return;
+        const text = document.getElementById('aba-json-area').value;
+        const nomeArquivo = `Backup_Aba_${abaAtualGerenciamento}_${getFormattedDate()}.json`;
+        downloadString(text, "application/json", nomeArquivo);
+    }
+
+    function carregarJsonArquivoAba(input) {
+        const file = input.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const parsed = JSON.parse(e.target.result); 
+                document.getElementById('aba-json-area').value = JSON.stringify(parsed, null, 2);
+            } catch (error) {
+                alert('Erro: Arquivo JSON inválido.');
+            }
+        };
+        reader.readAsText(file);
+        input.value = '';
+    }
+
+    function aplicarJsonAba() {
+        if (!abaAtualGerenciamento) return;
+        try {
+            const text = document.getElementById('aba-json-area').value;
+            const data = JSON.parse(text);
+            
+            if (abaAtualGerenciamento === 'config') {
+                bancoDados.configDemografica = data;
+            } else {
+                bancoDados[abaAtualGerenciamento] = data;
+            }
+            
+            salvarDadosLocal();
+            renderizarTudo(); 
+            fecharGerenciadorDadosAba();
+            alert('Dados da aba atualizados com sucesso!');
+        } catch (e) {
+            alert('JSON Inválido: Verifique a sintaxe antes de aplicar.\n' + e.message);
+        }
+    }
+
     // --- GEMINI API CONFIG (GERENCIADOR DE CHAVES) ---
     let userApiKey = ""; 
     let apiKeysList = [];
