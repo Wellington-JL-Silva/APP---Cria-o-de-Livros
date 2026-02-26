@@ -1,7 +1,7 @@
 <html lang="pt-br"><head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Códice - A Fenda (v10.0- organização das abas)</title>
+<title>Códice - A Fenda (v9.2 - organização das abas)</title>
 <!-- BIBLIOTECA ADICIONADA PARA DOCX -->
 <script src="https://unpkg.com/html-docx-js/dist/html-docx.js"></script>
 <style>
@@ -269,7 +269,7 @@
 <div id="aba-regras" class="content active">
     <div class="panel">
         <div class="header-row">
-            <h2>Painel de Controle &amp; Protocolo (v10.0)</h2>
+            <h2>Painel de Controle &amp; Protocolo (v9.2)</h2>
             <div>
                 <button class="btn btn-success" onclick="salvarDadosLocal()">💾 Salvar (Navegador)</button>
                 <button class="btn btn-warning" onclick="baixarBackupCompleto()">📦 Baixar TUDO (Backup JSON)</button>
@@ -546,15 +546,16 @@
             </div>
         </div>
         <div class="table-wrapper">
-            <table id="tabelaLeis">
+            <!-- AQUI FOI APLICADA A CORREÇÃO DA TABELA DE LEIS -->
+            <table id="tabelaLeis" style="table-layout: fixed; word-wrap: break-word;">
                 <thead>
                     <tr>
-                        <th class="sortable" width="60"><input type="checkbox" onclick="toggleSelecionarTudo(this, 'check-lei')" title="Todos"> Info</th>
-                        <th class="sortable" width="10%" onclick="ordenarTabelaLeis('id')">ID <span id="sort-lei-id" class="sort-icon"></span></th>
-                        <th class="sortable" width="15%" onclick="ordenarTabelaLeis('nome')">Código/Nome <span id="sort-lei-nome" class="sort-icon"></span></th>
-                        <th width="55%">Descrição</th>
-                        <th class="sortable" width="10%" onclick="ordenarTabelaLeis('data')">Data <span id="sort-lei-data" class="sort-icon"></span></th>
-                        <th class="no-print">Ações</th>
+                        <th class="sortable" style="width: 70px;"><input type="checkbox" onclick="toggleSelecionarTudo(this, 'check-lei')" title="Todos"> Info</th>
+                        <th class="sortable" style="width: 10%;" onclick="ordenarTabelaLeis('id')">ID <span id="sort-lei-id" class="sort-icon"></span></th>
+                        <th class="sortable" style="width: 15%;" onclick="ordenarTabelaLeis('nome')">Código/Nome <span id="sort-lei-nome" class="sort-icon"></span></th>
+                        <th style="width: 55%;">Descrição</th>
+                        <th class="sortable" style="width: 10%;" onclick="ordenarTabelaLeis('data')">Data <span id="sort-lei-data" class="sort-icon"></span></th>
+                        <th class="no-print" style="width: 80px;">Ações</th>
                     </tr>
                 </thead>
                 <tbody id="listaLeis"></tbody>
@@ -574,14 +575,15 @@
             </div>
         </div>
         <div class="table-wrapper">
-            <table id="tabelaFisica">
+            <!-- AQUI FOI APLICADA A CORREÇÃO DA TABELA DE FÍSICA -->
+            <table id="tabelaFisica" style="table-layout: fixed; word-wrap: break-word;">
                 <thead>
                     <tr>
-                        <th class="sortable" width="60"><input type="checkbox" onclick="toggleSelecionarTudo(this, 'check-fisica')" title="Todos"> Info</th>
-                        <th class="sortable" width="10%" onclick="ordenarTabelaFisica('id')">ID <span id="sort-fisica-id" class="sort-icon"></span></th>
-                        <th class="sortable" width="15%" onclick="ordenarTabelaFisica('regra')">Regra <span id="sort-fisica-regra" class="sort-icon"></span></th>
-                        <th width="60%">Descrição</th>
-                        <th class="no-print">Ações</th>
+                        <th class="sortable" style="width: 70px;"><input type="checkbox" onclick="toggleSelecionarTudo(this, 'check-fisica')" title="Todos"> Info</th>
+                        <th class="sortable" style="width: 10%;" onclick="ordenarTabelaFisica('id')">ID <span id="sort-fisica-id" class="sort-icon"></span></th>
+                        <th class="sortable" style="width: 15%;" onclick="ordenarTabelaFisica('regra')">Regra <span id="sort-fisica-regra" class="sort-icon"></span></th>
+                        <th style="width: 60%;">Descrição</th>
+                        <th class="no-print" style="width: 80px;">Ações</th>
                     </tr>
                 </thead>
                 <tbody id="listaFisica"></tbody>
@@ -1744,7 +1746,7 @@ ${textoAtual.slice(-6000)}`;
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = `Codice_A_Fenda_v10.0_${getFormattedDate()}.html`;
+        a.download = `Codice_A_Fenda_v9.2_${getFormattedDate()}.html`;
         document.body.appendChild(a); a.click(); document.body.removeChild(a);
         setTimeout(() => URL.revokeObjectURL(url), 1500);
     }
