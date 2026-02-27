@@ -1,7 +1,7 @@
 <html lang="pt-br"><head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Códice - A Fenda (v10.7)</title>
+<title>Códice - A Fenda (v11.0)</title>
 <!-- BIBLIOTECA ADICIONADA PARA DOCX -->
 <script src="https://unpkg.com/html-docx-js/dist/html-docx.js"></script>
 <style>
@@ -257,9 +257,10 @@
         <div class="tab" id="tab-personagens" onclick="switchTab('aba-personagens', this)">4. Personagens</div>
         <div class="tab" id="tab-elite" onclick="switchTab('aba-elite', this)">5. Elite SSS</div>
         <div class="tab" id="tab-mundo" onclick="switchTab('aba-mundo', this)">6. Física</div>
-        <div class="tab" id="tab-leis" onclick="switchTab('aba-leis', this)">7. Leis</div>
-        <div class="tab" id="tab-orgs" onclick="switchTab('aba-orgs', this)">8. Organizações</div>
-        <div class="tab" id="tab-nacoes" onclick="switchTab('aba-nacoes', this)">9. Geopolítica</div>
+        <div class="tab" id="tab-dons" onclick="switchTab('aba-dons', this)">7. Dons</div>
+        <div class="tab" id="tab-leis" onclick="switchTab('aba-leis', this)">8. Leis</div>
+        <div class="tab" id="tab-orgs" onclick="switchTab('aba-orgs', this)">9. Organizações</div>
+        <div class="tab" id="tab-nacoes" onclick="switchTab('aba-nacoes', this)">10. Geopolítica</div>
     </div>
     <button class="add-tab-btn" onclick="abrirCriadorAba()">+ Aba</button>
     <!-- BOTÃO MODO ESCURO -->
@@ -269,7 +270,7 @@
 <div id="aba-regras" class="content active">
     <div class="panel">
         <div class="header-row">
-            <h2>Painel de Controle &amp; Protocolo (v10.7)</h2>
+            <h2>Painel de Controle &amp; Protocolo (v11.0)</h2>
             <div>
                 <button class="btn btn-success" onclick="salvarDadosLocal()">💾 Salvar (Navegador)</button>
                 <button class="btn btn-warning" onclick="baixarBackupCompleto()">📦 Baixar TUDO (Backup JSON)</button>
@@ -583,6 +584,36 @@
     </div>
 </div>
 
+<div id="aba-dons" class="content">
+    <div class="panel">
+        <div class="header-row">
+            <h2>Catálogo de Dons & Poderes</h2>
+            <div>
+                <button class="btn btn-info" onclick="abrirGerenciadorTiers()">🎖️ Tiers</button>
+                <button class="btn btn-warning" onclick="abrirGerenciadorDadosAba('dons')">⚙️ Gerenciar Dados</button>
+                <button class="btn btn-secondary" onclick="baixarTabela('tabelaDons', 'Dons')">📊 Baixar Tabela</button>
+                <button class="btn btn-danger" onclick="deletarSelecionados('dons')" title="Apagar marcados">🗑️ Massa</button>
+                <button class="btn btn-primary" onclick="novoDom()">+ Dom</button>
+            </div>
+        </div>
+        <div class="table-wrapper">
+            <table id="tabelaDons" style="table-layout: fixed; word-wrap: break-word;">
+                <thead>
+                    <tr>
+                        <th class="sortable" style="width: 70px;"><input type="checkbox" onclick="toggleSelecionarTudo(this, 'check-dom')" title="Todos"> Info</th>
+                        <th class="sortable" style="width: 10%;" onclick="ordenarTabelaDom('id')">ID <span id="sort-dom-id" class="sort-icon"></span></th>
+                        <th class="sortable" style="width: 20%;" onclick="ordenarTabelaDom('nome')">Nome <span id="sort-dom-nome" class="sort-icon"></span></th>
+                        <th class="sortable" style="width: 15%;" onclick="ordenarTabelaDom('tier')">Tier <span id="sort-dom-tier" class="sort-icon"></span></th>
+                        <th style="width: 45%;">Descrição & Regras</th>
+                        <th class="no-print" style="width: 80px;">Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="listaDons"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
 <div id="aba-nacoes" class="content">
     <div class="panel">
         <div class="header-row">
@@ -662,6 +693,23 @@
             <input type="text" id="novoRankNome" placeholder="Novo Rank..." style="width: 150px; margin: 0;">
             <input type="color" id="novoRankCor" value="#34495e" style="width: 40px; height: 36px; padding: 0; border: none; cursor: pointer; margin: 0;">
             <button class="btn btn-sm btn-success" onclick="adicionarRankConfig()" style="margin: 0;">+ Adicionar</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL GERENCIADOR DE TIERS (DONS) -->
+<div id="tier-manager-modal" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 3000; display: none; align-items: center; justify-content: center;">
+    <div class="aba-json-box" style="height: auto;">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <h3 style="margin:0; color:var(--accent);">🎖️ Gerenciador de Tiers (Dons)</h3>
+            <button class="btn btn-danger btn-sm" onclick="fecharGerenciadorTiers()">X</button>
+        </div>
+        <p style="font-size:0.85em; opacity:0.8; margin:0;">Adicione novas classificações (Tiers) para os dons, edite cores ou remova. A ordem define a prioridade.</p>
+        <div id="painelGerenciadorTiers" style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; margin-bottom: 10px; max-height: 300px; overflow-y: auto;"></div>
+        <div style="display: flex; gap: 10px; align-items: center; background: var(--bg-body); padding: 10px; border-radius: 4px; border: 1px solid var(--border-color);">
+            <input type="text" id="novoTierNome" placeholder="Novo Tier..." style="width: 150px; margin: 0;">
+            <input type="color" id="novoTierCor" value="#8e44ad" style="width: 40px; height: 36px; padding: 0; border: none; cursor: pointer; margin: 0;">
+            <button class="btn btn-sm btn-success" onclick="adicionarTierConfig()" style="margin: 0;">+ Adicionar</button>
         </div>
     </div>
 </div>
@@ -1297,12 +1345,14 @@ ${textoAtual.slice(-6000)}`;
         organizacoes: [],
         leis: [],
         fisica: [],
+        dons: [], // NOVA ABA DONS
         nacoesInfo: {},
         configDemografica: {
             populacaoTotal: 9000000000,
             raridades: { "SS": { taxa: 50000000, np: 55000000 }, "S":  { taxa: 5000000,  np: 5500000 }, "A":  { taxa: 500000,   np: 550000 }, "B":  { taxa: 50000,    np: 55000 }, "C":  { taxa: 5000,     np: 5500 }, "D":  { taxa: 500,      np: 550 }, "E":  { taxa: 50,       np: 55 } }
         },
         configRanks: [], // NOVO GERENCIADOR DE RANKS
+        configTiers: [], // NOVO GERENCIADOR DE TIERS (DONS)
         abasPersonalizadas: [],
         meta: { dataAtual: "", marcador: "|||" }
     };
@@ -1314,6 +1364,7 @@ ${textoAtual.slice(-6000)}`;
     let estadoOrdenacaoOrg = { coluna: null, direcao: 1 };
     let estadoOrdenacaoFisica = { coluna: null, direcao: 1 };
     let estadoOrdenacaoLeis = { coluna: null, direcao: 1 };
+    let estadoOrdenacaoDom = { coluna: null, direcao: 1 };
 
     // --- HELPER DATA FORMATADA ---
     function getFormattedDate() {
@@ -1360,6 +1411,12 @@ ${textoAtual.slice(-6000)}`;
                 if(!o.id) o.id = `ORG-${i+1}`;
                 if(!o.citacoes) o.citacoes = "";
                 if(!o.regrasInternas) o.regrasInternas = [];
+            });
+        }
+        if(bancoDados.dons) {
+            bancoDados.dons.forEach((d, i) => {
+                if(!d.id) d.id = `DOM-${i+1}`;
+                if(!d.citacoes) d.citacoes = "";
             });
         }
         if(!bancoDados.projetos) bancoDados.projetos = [];
@@ -1417,6 +1474,7 @@ ${textoAtual.slice(-6000)}`;
             if (!bancoDados.organizacoes) bancoDados.organizacoes = [];
             if (!bancoDados.leis) bancoDados.leis = [];
             if (!bancoDados.fisica) bancoDados.fisica = [];
+            if (!bancoDados.dons) bancoDados.dons = [];
             if (!bancoDados.projetos) bancoDados.projetos = [];
             
             // Injeção de Ranks Base caso não existam
@@ -1431,6 +1489,16 @@ ${textoAtual.slice(-6000)}`;
                     { nome: "S", cor: "#d35400" },
                     { nome: "SS", cor: "#c0392b" },
                     { nome: "SSS", cor: "#8e44ad" }
+                ];
+            }
+
+            if (!bancoDados.configTiers || bancoDados.configTiers.length === 0) {
+                bancoDados.configTiers = [
+                    { nome: "Comum", cor: "#bdc3c7" },
+                    { nome: "Raro", cor: "#3498db" },
+                    { nome: "Épico", cor: "#9b59b6" },
+                    { nome: "Lendário", cor: "#f1c40f" },
+                    { nome: "Mítico", cor: "#e74c3c" }
                 ];
             }
             
@@ -1450,11 +1518,13 @@ ${textoAtual.slice(-6000)}`;
     function renderizarTudo() {
         renderizarAbasPersonalizadas();
         renderizarGerenciadorRanks();
+        renderizarGerenciadorTiers();
         renderizarPersonagens();
         renderizarOrganizacoes();
         renderizarElite(); 
         renderizarLeis();
         renderizarFisica();
+        renderizarDons();
         renderizarNacoes();
         atualizarIdades();
         renderizarListaCapitulos();
@@ -1507,6 +1577,56 @@ ${textoAtual.slice(-6000)}`;
             salvarDadosLocal();
         }
     }
+
+    // --- LÓGICA GERENCIADOR DE TIERS (DONS) ---
+    function renderizarGerenciadorTiers() {
+        const painel = document.getElementById('painelGerenciadorTiers');
+        if (!painel) return;
+        painel.innerHTML = '';
+        bancoDados.configTiers.forEach((tier, idx) => {
+            painel.innerHTML += `
+                <div style="display: flex; align-items: center; gap: 5px; background: rgba(0,0,0,0.05); padding: 5px 10px; border-radius: 4px; border: 1px solid var(--border-color);">
+                    <span style="font-weight: bold; color: ${tier.cor}; min-width: 30px; text-align: center;">${tier.nome}</span>
+                    <input type="color" value="${tier.cor}" onchange="atualizarCorTierConfig(${idx}, this.value)" style="width: 25px; height: 25px; padding: 0; border: none; cursor: pointer;">
+                    <button class="btn-del-mini" style="float:none; margin-left:0;" onclick="deletarTierConfig(${idx})">x</button>
+                </div>
+            `;
+        });
+    }
+
+    function adicionarTierConfig() {
+        const nome = document.getElementById('novoTierNome').value.trim();
+        const cor = document.getElementById('novoTierCor').value;
+        if (!nome) return;
+        if (bancoDados.configTiers.find(t => t.nome.toUpperCase() === nome.toUpperCase())) {
+            alert("Tier já existe na lista!");
+            return;
+        }
+        bancoDados.configTiers.push({ nome: nome, cor: cor });
+        document.getElementById('novoTierNome').value = '';
+        renderizarGerenciadorTiers();
+        renderizarDons();
+        salvarDadosLocal();
+    }
+
+    function atualizarCorTierConfig(idx, cor) {
+        bancoDados.configTiers[idx].cor = cor;
+        renderizarGerenciadorTiers();
+        renderizarDons();
+        salvarDadosLocal();
+    }
+
+    function deletarTierConfig(idx) {
+        if (confirm("Deseja apagar este Tier? Dons que já possuem este tier o manterão como texto, mas a cor personalizada será perdida.")) {
+            bancoDados.configTiers.splice(idx, 1);
+            renderizarGerenciadorTiers();
+            renderizarDons();
+            salvarDadosLocal();
+        }
+    }
+
+    function abrirGerenciadorTiers() { document.getElementById('tier-manager-modal').style.display = 'flex'; }
+    function fecharGerenciadorTiers() { document.getElementById('tier-manager-modal').style.display = 'none'; }
 
 
     // --- FUNÇÕES DE SUPORTE ---
@@ -1771,7 +1891,7 @@ ${textoAtual.slice(-6000)}`;
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = `Codice_A_Fenda_v10.7_${getFormattedDate()}.html`;
+        a.download = `Codice_A_Fenda_v11.0_${getFormattedDate()}.html`;
         document.body.appendChild(a); a.click(); document.body.removeChild(a);
         setTimeout(() => URL.revokeObjectURL(url), 1500);
     }
@@ -2286,6 +2406,98 @@ ${textoAtual.slice(-6000)}`;
         el.style.display = el.style.display === 'none' ? 'table-row' : 'none';
     }
 
+    // --- RENDERIZAÇÃO DONS ---
+    function ordenarTabelaDom(coluna) {
+        if (estadoOrdenacaoDom.coluna === coluna) { estadoOrdenacaoDom.direcao *= -1; } else { estadoOrdenacaoDom.coluna = coluna; estadoOrdenacaoDom.direcao = 1; }
+        atualizarIconesOrdenacao(coluna, 'sort-dom', estadoOrdenacaoDom);
+        
+        bancoDados.dons.sort((a, b) => {
+            let valA = a[coluna] || "";
+            let valB = b[coluna] || "";
+
+            if (coluna === 'info') {
+                const countA = a.citacoes ? a.citacoes.split(',').filter(s=>s.trim()).length : 0;
+                const countB = b.citacoes ? b.citacoes.split(',').filter(s=>s.trim()).length : 0;
+                return (countA - countB) * estadoOrdenacaoDom.direcao;
+            }
+            if (coluna === 'tier') {
+                const tierList = bancoDados.configTiers.map(t => t.nome);
+                let indexA = tierList.indexOf(valA);
+                let indexB = tierList.indexOf(valB);
+                if (indexA === -1) indexA = 999;
+                if (indexB === -1) indexB = 999;
+                return (indexA - indexB) * estadoOrdenacaoDom.direcao;
+            }
+
+            return String(valA).localeCompare(String(valB)) * estadoOrdenacaoDom.direcao;
+        });
+        renderizarDons();
+    }
+
+    function renderizarDons() {
+        const tbody = document.getElementById('listaDons');
+        if(!tbody) return;
+        let htmlBuffer = "";
+        
+        bancoDados.dons.forEach((item, i) => {
+            const citacoesArr = (item.citacoes || "").split(',').filter(s => s.trim() !== "");
+            const citacoesCount = citacoesArr.length;
+            let citacoesHTML = citacoesArr.map(c => `<span class="citation-chip">${c.trim()}</span>`).join(' ');
+
+            let tierConfig = bancoDados.configTiers.find(t => t.nome === item.tier);
+            let corTier = tierConfig ? tierConfig.cor : '#95a5a6';
+            let tierClass = 'badge';
+            let tierStyle = `background-color: ${corTier};`;
+            
+            let tierOptions = bancoDados.configTiers.map(opt => `<option value="${opt.nome}" ${opt.nome === item.tier ? 'selected' : ''}>${opt.nome}</option>`).join('');
+            if (item.tier && !tierConfig) {
+                tierOptions += `<option value="${item.tier}" selected>${item.tier} (Descontinuado)</option>`;
+            }
+            
+            htmlBuffer += `
+            <tr>
+                <td style="white-space:nowrap;">
+                    <input type="checkbox" class="check-dom" value="${i}" style="width:auto; margin-right:5px;">
+                    <span style="cursor:pointer" onclick="toggleDetalhesDom(${i})">➕ <span class="badge-info">${citacoesCount}</span></span>
+                </td>
+                <td contenteditable="true" class="editable id-cell" onblur="updDom(${i}, 'id', this.innerText)">${item.id || `DOM-${i+1}`}</td>
+                <td contenteditable="true" class="editable" onblur="updDom(${i}, 'nome', this.innerText)">${item.nome || ''}</td>
+                <td>
+                    <div style="display:flex; align-items:center;">
+                        <span id="tier-badge-${i}" class="${tierClass}" style="${tierStyle}">${item.tier || '-'}</span>
+                        <select style="width:auto; flex:1;" onchange="updDom(${i}, 'tier', this.value)">${tierOptions}</select>
+                    </div>
+                </td>
+                <td contenteditable="true" class="editable" onblur="updDom(${i}, 'desc', this.innerText)">${item.desc || ''}</td>
+                <td class="no-print"><button class="btn btn-danger" onclick="delItem('dons', ${i})">X</button></td>
+            </tr>
+            <tr id="detalhe-dom-${i}" style="display:none;" class="char-detail-row"><td colspan="6">
+                <div class="char-detail-container">
+                    <h4>📚 Capítulos onde este dom aparece/é citado:</h4>
+                    <div style="margin-bottom:10px;">${citacoesHTML || "<i>Sem registros.</i>"}</div>
+                    <label style="font-size:0.8em; color:#666;">Editar Citações (separar por vírgula):</label>
+                    <input type="text" value="${item.citacoes || ''}" onblur="updDom(${i}, 'citacoes', this.value)" style="width:100%; border:1px solid var(--border-color); padding:5px;">
+                </div>
+            </td></tr>`;
+        });
+        tbody.innerHTML = htmlBuffer;
+    }
+    
+    function toggleDetalhesDom(i) {
+        const el = document.getElementById(`detalhe-dom-${i}`);
+        el.style.display = el.style.display === 'none' ? 'table-row' : 'none';
+    }
+
+    function novoDom() { 
+        bancoDados.dons.push({id: `DOM-${Date.now()}`, nome: "Novo Dom", tier: bancoDados.configTiers[0]?.nome || "", desc: "", citacoes: ""}); 
+        renderizarDons(); 
+    }
+    
+    function updDom(i, field, val) { 
+        bancoDados.dons[i][field] = val; 
+        if (field === 'tier') renderizarDons(); 
+    }
+
     // --- RENDERIZAÇÃO LEIS ---
     function renderizarLeis() {
         const tbody = document.getElementById('listaLeis');
@@ -2574,12 +2786,18 @@ ${textoAtual.slice(-6000)}`;
                     if(!bancoDados.organizacoes) bancoDados.organizacoes = [];
                     if(!bancoDados.leis) bancoDados.leis = [];
                     if(!bancoDados.fisica) bancoDados.fisica = [];
+                    if(!bancoDados.dons) bancoDados.dons = [];
                     if(!bancoDados.projetos) bancoDados.projetos = [];
                     if(!bancoDados.configRanks || bancoDados.configRanks.length === 0) {
                         bancoDados.configRanks = [
                             { nome: "Não Desperto", cor: "#95a5a6" }, { nome: "E", cor: "#7f8c8d" }, { nome: "D", cor: "#bdc3c7" }, 
                             { nome: "C", cor: "#1abc9c" }, { nome: "B", cor: "#2980b9" }, { nome: "A", cor: "#f39c12" }, 
                             { nome: "S", cor: "#d35400" }, { nome: "SS", cor: "#c0392b" }, { nome: "SSS", cor: "#8e44ad" }
+                        ];
+                    }
+                    if(!bancoDados.configTiers || bancoDados.configTiers.length === 0) {
+                        bancoDados.configTiers = [
+                            { nome: "Comum", cor: "#bdc3c7" }, { nome: "Raro", cor: "#3498db" }, { nome: "Épico", cor: "#9b59b6" }, { nome: "Lendário", cor: "#f1c40f" }, { nome: "Mítico", cor: "#e74c3c" }
                         ];
                     }
                     if(!bancoDados.abasPersonalizadas) bancoDados.abasPersonalizadas = [];
@@ -2957,6 +3175,11 @@ ${textoAtual.slice(-6000)}`;
             classeCheckbox = 'check-fisica'; 
             arrayAlvo = 'fisica'; 
             nomeAmigavel = "regras físicas";
+        }
+        else if (tipo === 'dons') { 
+            classeCheckbox = 'check-dom'; 
+            arrayAlvo = 'dons'; 
+            nomeAmigavel = "dons";
         }
         
         const checkboxes = document.querySelectorAll(`.${classeCheckbox}:checked`);
