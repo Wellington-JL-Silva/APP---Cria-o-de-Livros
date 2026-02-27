@@ -230,8 +230,8 @@
         box-sizing: content-box;
     }
     
-    /* MODAL GERENCIADOR DE DADOS DA ABA */
-    #aba-json-modal {
+    /* MODAL GERENCIADOR DE DADOS DA ABA E RANKS */
+    #aba-json-modal, #rank-manager-modal {
         position: fixed; top: 0; left: 0; right: 0; bottom: 0;
         background: rgba(0,0,0,0.7); z-index: 3000;
         display: none; align-items: center; justify-content: center;
@@ -432,22 +432,11 @@
             <h2>Personagens (Perfil Profundo)</h2>
             <div>
                 <button class="btn btn-ai" onclick="iaGerarPersonagem()" title="Criar NPC automaticamente">✨ IA: Gerar NPC</button>
+                <button class="btn btn-info" onclick="abrirGerenciadorRanks()">🎖️ Ranks</button>
                 <button class="btn btn-warning" onclick="abrirGerenciadorDadosAba('personagens')">⚙️ Gerenciar Dados</button>
                 <button class="btn btn-secondary" onclick="baixarTabela('tabelaPersonagens', 'Personagens')">📊 Baixar Tabela</button>
                 <button class="btn btn-danger" onclick="deletarSelecionados('personagens')" title="Apagar marcados">🗑️ Massa</button>
                 <button class="btn btn-primary" onclick="novoPersonagem()">+ Novo</button>
-            </div>
-        </div>
-
-        <!-- NOVO: GERENCIADOR DE RANKS DINÂMICO -->
-        <div style="background: var(--bg-panel); padding: 15px; border-bottom: 2px solid var(--border-color); margin-bottom: 20px;">
-            <label style="font-weight: bold; font-size: 1.1em; color: var(--accent);">🎖️ Gerenciador de Ranks (Tiers):</label>
-            <div id="painelGerenciadorRanks" style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; margin-bottom: 10px;"></div>
-            <div>
-                <input type="text" id="novoRankNome" placeholder="Novo Rank..." style="width: 150px; display: inline-block;">
-                <input type="color" id="novoRankCor" value="#34495e" style="width: 40px; height: 36px; padding: 0; display: inline-block; vertical-align: middle; border: none; cursor: pointer;">
-                <button class="btn btn-sm btn-success" onclick="adicionarRankConfig()">+ Adicionar</button>
-                <span style="font-size: 0.85em; color: var(--text); opacity: 0.7; margin-left: 10px;">A ordem dos ranks aqui define a ordenação na tabela.</span>
             </div>
         </div>
 
@@ -659,6 +648,23 @@
     </div>
 </div>
 
+<!-- MODAL GERENCIADOR DE RANKS -->
+<div id="rank-manager-modal">
+    <div class="aba-json-box" style="height: auto;">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <h3 style="margin:0; color:var(--accent);">🎖️ Gerenciador de Ranks (Tiers)</h3>
+            <button class="btn btn-danger btn-sm" onclick="fecharGerenciadorRanks()">X</button>
+        </div>
+        <p style="font-size:0.85em; opacity:0.8; margin:0;">Adicione novos ranks, edite as cores ou remova tiers existentes. A ordem define a prioridade na tabela.</p>
+        <div id="painelGerenciadorRanks" style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; margin-bottom: 10px; max-height: 300px; overflow-y: auto;"></div>
+        <div style="display: flex; gap: 10px; align-items: center; background: var(--bg-body); padding: 10px; border-radius: 4px; border: 1px solid var(--border-color);">
+            <input type="text" id="novoRankNome" placeholder="Novo Rank..." style="width: 150px; margin: 0;">
+            <input type="color" id="novoRankCor" value="#34495e" style="width: 40px; height: 36px; padding: 0; border: none; cursor: pointer; margin: 0;">
+            <button class="btn btn-sm btn-success" onclick="adicionarRankConfig()" style="margin: 0;">+ Adicionar</button>
+        </div>
+    </div>
+</div>
+
 <div id="dynamic-contents"></div>
 
 <script id="dados-injetados"></script>
@@ -740,6 +746,15 @@
         } catch (e) {
             alert('JSON Inválido: Verifique a sintaxe antes de aplicar.\n' + e.message);
         }
+    }
+
+    // --- LÓGICA GERENCIADOR DE RANKS (MODAL) ---
+    function abrirGerenciadorRanks() {
+        document.getElementById('rank-manager-modal').style.display = 'flex';
+    }
+
+    function fecharGerenciadorRanks() {
+        document.getElementById('rank-manager-modal').style.display = 'none';
     }
 
     // --- GEMINI API CONFIG (GERENCIADOR DE CHAVES) ---
