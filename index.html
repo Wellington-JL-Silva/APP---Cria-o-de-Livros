@@ -1,7 +1,7 @@
 <html lang="pt-br"><head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Códice - A Fenda (v9.2 - organização das abas)</title>
+<title>Códice - A Fenda (v10.4)</title>
 <!-- BIBLIOTECA ADICIONADA PARA DOCX -->
 <script src="https://unpkg.com/html-docx-js/dist/html-docx.js"></script>
 <style>
@@ -269,7 +269,7 @@
 <div id="aba-regras" class="content active">
     <div class="panel">
         <div class="header-row">
-            <h2>Painel de Controle &amp; Protocolo (v9.2)</h2>
+            <h2>Painel de Controle &amp; Protocolo (v10.4)</h2>
             <div>
                 <button class="btn btn-success" onclick="salvarDadosLocal()">💾 Salvar (Navegador)</button>
                 <button class="btn btn-warning" onclick="baixarBackupCompleto()">📦 Baixar TUDO (Backup JSON)</button>
@@ -651,6 +651,7 @@
             <div style="width: 1px; background: var(--border-color); margin: 0 5px;"></div>
             <button class="btn btn-info" onclick="document.getElementById('uploadAbaJsonBtn').click()">📂 Carregar Arquivo</button>
             <button class="btn btn-warning" onclick="baixarJsonAbaModal()">💾 Baixar Arquivo</button>
+            <button class="btn btn-warning" style="background:var(--proj-color);" onclick="baixarTxtAbaModal()">📄 Baixar TXT</button>
             <button class="btn btn-success" onclick="aplicarJsonAba()">✅ Aplicar JSON</button>
             <input type="file" id="uploadAbaJsonBtn" accept=".json" style="display:none" onchange="carregarJsonArquivoAba(this)">
         </div>
@@ -694,6 +695,13 @@
         const text = document.getElementById('aba-json-area').value;
         const nomeArquivo = `Backup_Aba_${abaAtualGerenciamento}_${getFormattedDate()}.json`;
         downloadString(text, "application/json", nomeArquivo);
+    }
+
+    function baixarTxtAbaModal() {
+        if (!abaAtualGerenciamento) return;
+        const text = document.getElementById('aba-json-area').value;
+        const nomeArquivo = `Backup_Aba_${abaAtualGerenciamento}_${getFormattedDate()}.txt`;
+        downloadString(text, "text/plain", nomeArquivo);
     }
 
     function carregarJsonArquivoAba(input) {
@@ -1746,7 +1754,7 @@ ${textoAtual.slice(-6000)}`;
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = `Codice_A_Fenda_v9.2_${getFormattedDate()}.html`;
+        a.download = `Codice_A_Fenda_v10.4_${getFormattedDate()}.html`;
         document.body.appendChild(a); a.click(); document.body.removeChild(a);
         setTimeout(() => URL.revokeObjectURL(url), 1500);
     }
