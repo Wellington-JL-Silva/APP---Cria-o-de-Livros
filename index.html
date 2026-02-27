@@ -1,7 +1,7 @@
 <html lang="pt-br"><head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Códice - A Fenda (v10.5)</title>
+<title>Códice - A Fenda (v10.7)</title>
 <!-- BIBLIOTECA ADICIONADA PARA DOCX -->
 <script src="https://unpkg.com/html-docx-js/dist/html-docx.js"></script>
 <style>
@@ -269,7 +269,7 @@
 <div id="aba-regras" class="content active">
     <div class="panel">
         <div class="header-row">
-            <h2>Painel de Controle &amp; Protocolo (v10.5)</h2>
+            <h2>Painel de Controle &amp; Protocolo (v10.7)</h2>
             <div>
                 <button class="btn btn-success" onclick="salvarDadosLocal()">💾 Salvar (Navegador)</button>
                 <button class="btn btn-warning" onclick="baixarBackupCompleto()">📦 Baixar TUDO (Backup JSON)</button>
@@ -512,6 +512,7 @@
                     <tr>
                         <th width="50">Pos.</th>
                         <th>Nome</th>
+                        <th>Dom</th>
                         <th>País</th>
                         <th>Nascimento</th>
                         <th>Idade</th>
@@ -1770,7 +1771,7 @@ ${textoAtual.slice(-6000)}`;
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = `Codice_A_Fenda_v10.5_${getFormattedDate()}.html`;
+        a.download = `Codice_A_Fenda_v10.7_${getFormattedDate()}.html`;
         document.body.appendChild(a); a.click(); document.body.removeChild(a);
         setTimeout(() => URL.revokeObjectURL(url), 1500);
     }
@@ -2399,6 +2400,7 @@ ${textoAtual.slice(-6000)}`;
             tbody.innerHTML += `<tr>
                 <td style="font-weight:bold; color:var(--accent)">#${i+1}</td>
                 <td><b>${p.nome}</b></td>
+                <td>${p.dom || '-'}</td>
                 <td>${p.pais}</td>
                 <td>${nascDisplay}</td>
                 <td>${idade}</td>
