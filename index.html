@@ -1,7 +1,7 @@
 <html lang="pt-br"><head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Códice - A Fenda (v10.4)</title>
+<title>Códice - A Fenda (v10.5)</title>
 <!-- BIBLIOTECA ADICIONADA PARA DOCX -->
 <script src="https://unpkg.com/html-docx-js/dist/html-docx.js"></script>
 <style>
@@ -269,7 +269,7 @@
 <div id="aba-regras" class="content active">
     <div class="panel">
         <div class="header-row">
-            <h2>Painel de Controle &amp; Protocolo (v10.4)</h2>
+            <h2>Painel de Controle &amp; Protocolo (v10.5)</h2>
             <div>
                 <button class="btn btn-success" onclick="salvarDadosLocal()">💾 Salvar (Navegador)</button>
                 <button class="btn btn-warning" onclick="baixarBackupCompleto()">📦 Baixar TUDO (Backup JSON)</button>
@@ -460,6 +460,7 @@
                             Info <span id="sort-info" class="sort-icon"></span>
                         </th>
                         <th class="sortable" onclick="ordenarTabela('nome')">Nome <span id="sort-nome" class="sort-icon"></span></th>
+                        <th class="sortable" onclick="ordenarTabela('dom')">Dom <span id="sort-dom" class="sort-icon"></span></th>
                         <th class="sortable" onclick="ordenarTabela('pais')">País <span id="sort-pais" class="sort-icon"></span></th>
                         <th class="sortable" width="150" onclick="ordenarTabela('rank')">Rank <span id="sort-rank" class="sort-icon"></span></th>
                         <th class="sortable" onclick="ordenarTabela('np')">NP (Poder) <span id="sort-np" class="sort-icon"></span></th>
@@ -1754,7 +1755,7 @@ ${textoAtual.slice(-6000)}`;
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = `Codice_A_Fenda_v10.4_${getFormattedDate()}.html`;
+        a.download = `Codice_A_Fenda_v10.5_${getFormattedDate()}.html`;
         document.body.appendChild(a); a.click(); document.body.removeChild(a);
         setTimeout(() => URL.revokeObjectURL(url), 1500);
     }
@@ -2035,6 +2036,7 @@ ${textoAtual.slice(-6000)}`;
                         <span style="cursor:pointer" onclick="toggleDetalhes(${index})">➕ <span class="badge-info">${infoCount}</span></span>
                     </td>
                     <td contenteditable="true" class="editable" onblur="updChar(${index}, 'nome', this.innerText)">${p.nome}</td>
+                    <td contenteditable="true" class="editable" onblur="updChar(${index}, 'dom', this.innerText)">${p.dom || ''}</td>
                     <td contenteditable="true" class="editable" onblur="updChar(${index}, 'pais', this.innerText)">${p.pais}</td>
                     <td>
                         <div style="display:flex; align-items:center;">
@@ -2051,7 +2053,7 @@ ${textoAtual.slice(-6000)}`;
                         <button class="btn btn-danger btn-sm" onclick="delItem('personagens', ${index})">X</button>
                     </td>
                 </tr>
-                <tr id="detalhe-${index}" style="display:none" class="char-detail-row"><td colspan="9">
+                <tr id="detalhe-${index}" style="display:none" class="char-detail-row"><td colspan="10">
                     <div class="char-detail-container">
                         <div class="detail-grid">
                             <div>
