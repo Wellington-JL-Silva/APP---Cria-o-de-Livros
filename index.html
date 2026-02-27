@@ -1468,7 +1468,8 @@ ${textoAtual.slice(-6000)}`;
                 const d = localStorage.getItem('codexSagaData_v6') || localStorage.getItem('codexSagaData_v5');
                 if (d) { bancoDados = JSON.parse(d); } else {
                     bancoDados.historia = [{ id: "1.0", titulo: "Início", conteudo: "Comece a escrever aqui..." }];
-                    bancoDados.personagens = [{ nome: "Dra. Evelyn Reed", pais: "Estados Unidos", rank: "SSS", np: 2500000000, nascimento: "1951-05-15", status: "Ativa", personalidade: [], inventario: [], relacionamentos: [] }];
+                    bancoDados.personagens = [{ nome: "Dra. Evelyn Reed", dom: "Controle de luz", pais: "Estados Unidos", rank: "SSS", np: 2500000000, nascimento: "1951-05-15", status: "Ativa", personalidade: [], inventario: [], relacionamentos: [] }];
+                    bancoDados.dons = [{ id: `DOM-1`, nome: "Controle de luz", tier: "IV", desc: "Controle de fótons", citacoes: "" }];
                 }
             }
             if (!bancoDados.organizacoes) bancoDados.organizacoes = [];
@@ -1494,11 +1495,11 @@ ${textoAtual.slice(-6000)}`;
 
             if (!bancoDados.configTiers || bancoDados.configTiers.length === 0) {
                 bancoDados.configTiers = [
-                    { nome: "Comum", cor: "#bdc3c7" },
-                    { nome: "Raro", cor: "#3498db" },
-                    { nome: "Épico", cor: "#9b59b6" },
-                    { nome: "Lendário", cor: "#f1c40f" },
-                    { nome: "Mítico", cor: "#e74c3c" }
+                    { nome: "I", cor: "#bdc3c7" },
+                    { nome: "II", cor: "#3498db" },
+                    { nome: "III", cor: "#9b59b6" },
+                    { nome: "IV", cor: "#f1c40f" },
+                    { nome: "V", cor: "#e74c3c" }
                 ];
             }
             
@@ -2678,6 +2679,22 @@ ${textoAtual.slice(-6000)}`;
             renderizarElite();
             renderizarNacoes();
         }
+        
+        // --- NOVA LÓGICA DE SINCRONIZAÇÃO DE DONS ---
+        if (field === 'dom' && val.trim() !== '') {
+            const domExiste = bancoDados.dons.some(d => d.nome.toLowerCase() === val.trim().toLowerCase());
+            if (!domExiste) {
+                bancoDados.dons.push({
+                    id: `DOM-${Date.now()}`, 
+                    nome: val.trim(), 
+                    tier: bancoDados.configTiers[0]?.nome || "I", 
+                    desc: "", 
+                    citacoes: ""
+                });
+            }
+            renderizarDons(); // Atualiza a aba Dons por trás
+        }
+
         if(field === 'pais' || field === 'np') { renderizarElite(); renderizarNacoes(); }
         if(field === 'nascimento') { atualizarIdades(); renderizarElite(); }
     }
@@ -2797,7 +2814,7 @@ ${textoAtual.slice(-6000)}`;
                     }
                     if(!bancoDados.configTiers || bancoDados.configTiers.length === 0) {
                         bancoDados.configTiers = [
-                            { nome: "Comum", cor: "#bdc3c7" }, { nome: "Raro", cor: "#3498db" }, { nome: "Épico", cor: "#9b59b6" }, { nome: "Lendário", cor: "#f1c40f" }, { nome: "Mítico", cor: "#e74c3c" }
+                            { nome: "I", cor: "#bdc3c7" }, { nome: "II", cor: "#3498db" }, { nome: "III", cor: "#9b59b6" }, { nome: "IV", cor: "#f1c40f" }, { nome: "V", cor: "#e74c3c" }
                         ];
                     }
                     if(!bancoDados.abasPersonalizadas) bancoDados.abasPersonalizadas = [];
