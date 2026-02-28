@@ -639,8 +639,8 @@
             <table id="tabelaNacoes">
                 <thead>
                     <tr>
-                        <th>País</th>
-                        <th>% Pop</th>
+                        <th class="sortable" onclick="ordenarTabelaNacoes('nome')">País <span id="sort-nacoes-nome" class="sort-icon"></span></th>
+                        <th class="sortable" onclick="ordenarTabelaNacoes('pct')">% Pop <span id="sort-nacoes-pct" class="sort-icon"></span></th>
                         <th>População Total</th>
                         <th title="Contagem real da Aba Personagens">SSS (Real)</th>
                         <th>SS (Est.)</th>
@@ -650,7 +650,7 @@
                         <th>C (Est.)</th>
                         <th>D (Est.)</th>
                         <th>E (Est.)</th>
-                        <th>Poder Total (Real + Est.)</th>
+                        <th class="sortable" onclick="ordenarTabelaNacoes('poderTotal')">Poder Total (Real + Est.) <span id="sort-nacoes-poderTotal" class="sort-icon"></span></th>
                         <th width="20%">Política / Notas</th>
                         <th class="no-print">Ações</th>
                     </tr>
@@ -1369,6 +1369,7 @@ ${textoAtual.slice(-6000)}`;
     let estadoOrdenacaoFisica = { coluna: null, direcao: 1 };
     let estadoOrdenacaoLeis = { coluna: null, direcao: 1 };
     let estadoOrdenacaoDom = { coluna: null, direcao: 1 };
+    let estadoOrdenacaoNacoes = { coluna: null, direcao: 1 };
 
     // --- HELPER DATA FORMATADA ---
     function getFormattedDate() {
@@ -2133,6 +2134,37 @@ ${textoAtual.slice(-6000)}`;
         if(el) el.innerText = icone;
     }
 
+    function ordenarTabelaNacoes(coluna) {
+        if (estadoOrdenacaoNacoes.coluna === coluna) { estadoOrdenacaoNacoes.direcao *= -1; } else { estadoOrdenacaoNacoes.coluna = coluna; estadoOrdenacaoNacoes.direcao = 1; }
+        atualizarIconesOrdenacao(coluna, 'sort-nacoes', estadoOrdenacaoNacoes);
+        
+        const popTotal = bancoDados.configDemografica.populacaoTotal || 9000000000;
+        const raridades = bancoDados.configDemografica.raridades;
+        const ranks = ["SS", "S", "A", "B", "C", "D", "E"];
+
+        bancoDados.paises.sort((a, b) => {
+            if (coluna === 'poderTotal') {
+                let popA = Math.floor(popTotal * a.pct);
+                let pwrA = bancoDados.personagens.filter(p => p.pais === a.nome && p.rank && p.rank.trim().toUpperCase() === 'SSS').reduce((sum, p) => sum + parseInt(p.np || 0), 0);
+                ranks.forEach(r => pwrA += Math.floor(popA / raridades[r].taxa) * raridades[r].np);
+
+                let popB = Math.floor(popTotal * b.pct);
+                let pwrB = bancoDados.personagens.filter(p => p.pais === b.nome && p.rank && p.rank.trim().toUpperCase() === 'SSS').reduce((sum, p) => sum + parseInt(p.np || 0), 0);
+                ranks.forEach(r => pwrB += Math.floor(popB / raridades[r].taxa) * raridades[r].np);
+
+                return (pwrA - pwrB) * estadoOrdenacaoNacoes.direcao;
+            }
+
+            let valA = a[coluna] || "";
+            let valB = b[coluna] || "";
+            if (coluna === 'pct') {
+                return (parseFloat(valA) - parseFloat(valB)) * estadoOrdenacaoNacoes.direcao;
+            }
+            return String(valA).localeCompare(String(valB)) * estadoOrdenacaoNacoes.direcao;
+        });
+        renderizarNacoes();
+    }
+
     // --- RENDERIZAÇÃO PERSONAGENS ---
     // --- RENDERIZAÇÃO OTIMIZADA (PERSONAGENS) ---
     function renderizarPersonagens() {
@@ -2661,8 +2693,7 @@ ${textoAtual.slice(-6000)}`;
         const raridades = bancoDados.configDemografica.raridades;
         const ranks = ["SS", "S", "A", "B", "C", "D", "E"];
         
-        // Garante a ordenação descendente pela porcentagem
-        bancoDados.paises.sort((a,b) => b.pct - a.pct);
+        // A ordenação manual via ordenarTabelaNacoes assume o controle agora
 
         bancoDados.paises.forEach((paisObj, index) => {
             const pais = paisObj.nome;
