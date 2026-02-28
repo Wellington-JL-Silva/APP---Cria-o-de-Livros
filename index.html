@@ -1,7 +1,7 @@
 <html lang="pt-br"><head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Códice - A Fenda (v11.2)</title>
+<title>Códice - A Fenda (v11.5)</title>
 <!-- BIBLIOTECA ADICIONADA PARA DOCX -->
 <script src="https://unpkg.com/html-docx-js/dist/html-docx.js"></script>
 <style>
@@ -270,7 +270,7 @@
 <div id="aba-regras" class="content active">
     <div class="panel">
         <div class="header-row">
-            <h2>Painel de Controle &amp; Protocolo (v11.2)</h2>
+            <h2>Painel de Controle &amp; Protocolo (v11.5)</h2>
             <div>
                 <button class="btn btn-success" onclick="salvarDadosLocal()">💾 Salvar (Navegador)</button>
                 <button class="btn btn-warning" onclick="baixarBackupCompleto()">📦 Baixar TUDO (Backup JSON)</button>
@@ -619,8 +619,10 @@
         <div class="header-row">
             <h2>Geopolítica &amp; Demografia</h2>
             <div>
-                <button class="btn btn-warning" onclick="abrirGerenciadorDadosAba('config')">⚙️ Gerenciar Dados</button>
+                <button class="btn btn-warning" onclick="abrirGerenciadorDadosAba('config')">⚙️ Dados Demo</button>
+                <button class="btn btn-warning" onclick="abrirGerenciadorDadosAba('paises')">⚙️ Dados Países</button>
                 <button class="btn btn-secondary" onclick="baixarTabela('tabelaNacoes', 'Geopolitica')">📊 Baixar Tabela</button>
+                <button class="btn btn-primary" onclick="novoPais()">+ País</button>
                 <button class="btn btn-secondary" onclick="resetarPadroes()">Restaurar Padrões</button>
             </div>
         </div>
@@ -650,6 +652,7 @@
                         <th>E (Est.)</th>
                         <th>Poder Total (Real + Est.)</th>
                         <th width="20%">Política / Notas</th>
+                        <th class="no-print">Ações</th>
                     </tr>
                 </thead>
                 <tbody id="listaNacoes"></tbody>
@@ -1346,6 +1349,7 @@ ${textoAtual.slice(-6000)}`;
         leis: [],
         fisica: [],
         dons: [], // NOVA ABA DONS
+        paises: [], // NOVA ESTRUTURA JSON PARA PAÍSES
         nacoesInfo: {},
         configDemografica: {
             populacaoTotal: 9000000000,
@@ -1501,6 +1505,11 @@ ${textoAtual.slice(-6000)}`;
                     { nome: "IV", cor: "#f1c40f" },
                     { nome: "V", cor: "#e74c3c" }
                 ];
+            }
+
+            // Converter antigos países fixos para JSON dinâmico se a lista estiver vazia
+            if (!bancoDados.paises || bancoDados.paises.length === 0) {
+                bancoDados.paises = Object.keys(POPULATION_DATA).map(key => ({ nome: key, pct: POPULATION_DATA[key] }));
             }
             
             if(bancoDados.protocolo) document.getElementById('regrasIA').value = bancoDados.protocolo;
@@ -1904,7 +1913,7 @@ ${textoAtual.slice(-6000)}`;
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = `Codice_A_Fenda_v11.2_${getFormattedDate()}.html`;
+        a.download = `Codice_A_Fenda_v11.5_${getFormattedDate()}.html`;
         document.body.appendChild(a); a.click(); document.body.removeChild(a);
         setTimeout(() => URL.revokeObjectURL(url), 1500);
     }
@@ -2648,21 +2657,27 @@ ${textoAtual.slice(-6000)}`;
         const tbody = document.getElementById('listaNacoes');
         tbody.innerHTML = '';
         
-        // CORREÇÃO: Usar a população configurada
         const popTotal = bancoDados.configDemografica.populacaoTotal || 9000000000;
-        
         const raridades = bancoDados.configDemografica.raridades;
         const ranks = ["SS", "S", "A", "B", "C", "D", "E"];
-        const paisesOrdenados = Object.keys(POPULATION_DATA).sort((a,b) => POPULATION_DATA[b] - POPULATION_DATA[a]);
+        
+        // Garante a ordenação descendente pela porcentagem
+        bancoDados.paises.sort((a,b) => b.pct - a.pct);
 
-        paisesOrdenados.forEach(pais => {
-            const pct = POPULATION_DATA[pais];
+        bancoDados.paises.forEach((paisObj, index) => {
+            const pais = paisObj.nome;
+            const pct = paisObj.pct;
             const popPais = Math.floor(popTotal * pct);
             const sssChars = bancoDados.personagens.filter(p => p.pais === pais && p.rank && p.rank.trim().toUpperCase() === 'SSS');
             const sssCount = sssChars.length;
             const sssPower = sssChars.reduce((sum, p) => sum + parseInt(p.np || 0), 0);
 
-            let row = `<tr><td><b>${pais}</b></td><td>${(pct*100).toFixed(2)}%</td><td class="number-cell">${popPais.toLocaleString('pt-BR')}</td><td class="number-cell" style="color:purple; font-weight:bold">${sssCount}</td>`;
+            let row = `<tr>
+                <td contenteditable="true" class="editable" onblur="updPais(${index}, 'nome', this.innerText)"><b>${pais}</b></td>
+                <td contenteditable="true" class="editable" onblur="updPais(${index}, 'pct', this.innerText)">${(pct*100).toFixed(4)}%</td>
+                <td class="number-cell">${popPais.toLocaleString('pt-BR')}</td>
+                <td class="number-cell" style="color:purple; font-weight:bold">${sssCount}</td>`;
+                
             let poderTotal = sssPower; 
             ranks.forEach(rank => {
                 const count = Math.floor(popPais / raridades[rank].taxa);
@@ -2671,9 +2686,29 @@ ${textoAtual.slice(-6000)}`;
             });
             let poderFmt = poderTotal > 1e9 ? (poderTotal/1e9).toFixed(1) + " B" : poderTotal.toLocaleString('pt-BR');
             const info = bancoDados.nacoesInfo[pais] || { politica: "" };
-            row += `<td class="number-cell" style="color:var(--success)">${poderFmt}</td><td contenteditable="true" class="editable" onblur="salvarInfoNacao('${pais}', 'politica', this.innerText)">${info.politica}</td></tr>`;
+            row += `<td class="number-cell" style="color:var(--success)">${poderFmt}</td>
+                    <td contenteditable="true" class="editable" onblur="salvarInfoNacao('${pais}', 'politica', this.innerText)">${info.politica}</td>
+                    <td class="no-print"><button class="btn btn-danger btn-sm" onclick="delItem('paises', ${index})">X</button></td>
+                </tr>`;
             tbody.innerHTML += row;
         });
+    }
+
+    function updPais(index, field, val) {
+        if (field === 'pct') {
+            let parsed = parseFloat(val.replace('%', '').replace(',', '.'));
+            if (!isNaN(parsed)) {
+                bancoDados.paises[index].pct = parsed / 100;
+            }
+        } else {
+            bancoDados.paises[index][field] = val;
+        }
+        renderizarNacoes();
+    }
+
+    function novoPais() {
+        bancoDados.paises.push({ nome: "Novo País", pct: 0.001 });
+        renderizarNacoes();
     }
 
     // --- UPDATES ---
@@ -2844,6 +2879,9 @@ ${textoAtual.slice(-6000)}`;
                         populacaoTotal: 9000000000,
                         raridades: { "SS":{taxa:50000000,np:55000000}, "S":{taxa:5000000,np:5500000}, "A":{taxa:500000,np:550000}, "B":{taxa:50000,np:55000}, "C":{taxa:5000,np:5500}, "D":{taxa:500,np:550}, "E":{taxa:50,np:55} }
                     };
+                    if(!bancoDados.paises || bancoDados.paises.length === 0) {
+                        bancoDados.paises = Object.keys(POPULATION_DATA).map(key => ({ nome: key, pct: POPULATION_DATA[key] }));
+                    }
 
                     // --- ATUALIZAÇÃO VISUAL IMEDIATA (CORREÇÃO) ---
                     // Protocolo
