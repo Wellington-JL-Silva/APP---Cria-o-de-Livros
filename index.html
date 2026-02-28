@@ -1,7 +1,7 @@
 <html lang="pt-br"><head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Códice - A Fenda (v11.0)</title>
+<title>Códice - A Fenda (v11.2)</title>
 <!-- BIBLIOTECA ADICIONADA PARA DOCX -->
 <script src="https://unpkg.com/html-docx-js/dist/html-docx.js"></script>
 <style>
@@ -270,7 +270,7 @@
 <div id="aba-regras" class="content active">
     <div class="panel">
         <div class="header-row">
-            <h2>Painel de Controle &amp; Protocolo (v11.0)</h2>
+            <h2>Painel de Controle &amp; Protocolo (v11.2)</h2>
             <div>
                 <button class="btn btn-success" onclick="salvarDadosLocal()">💾 Salvar (Navegador)</button>
                 <button class="btn btn-warning" onclick="baixarBackupCompleto()">📦 Baixar TUDO (Backup JSON)</button>
@@ -1542,10 +1542,22 @@ ${textoAtual.slice(-6000)}`;
                 <div style="display: flex; align-items: center; gap: 5px; background: rgba(0,0,0,0.05); padding: 5px 10px; border-radius: 4px; border: 1px solid var(--border-color);">
                     <span style="font-weight: bold; color: ${rank.cor}; min-width: 30px; text-align: center;">${rank.nome}</span>
                     <input type="color" value="${rank.cor}" onchange="atualizarCorRankConfig(${idx}, this.value)" style="width: 25px; height: 25px; padding: 0; border: none; cursor: pointer;">
+                    <button class="btn btn-secondary btn-sm" style="padding: 2px 6px; margin: 0;" onclick="moverRank(${idx}, -1)" title="Subir Prioridade">↑</button>
+                    <button class="btn btn-secondary btn-sm" style="padding: 2px 6px; margin: 0;" onclick="moverRank(${idx}, 1)" title="Descer Prioridade">↓</button>
                     <button class="btn-del-mini" style="float:none; margin-left:0;" onclick="deletarRankConfig(${idx})">x</button>
                 </div>
             `;
         });
+    }
+
+    function moverRank(idx, dir) {
+        if (idx + dir < 0 || idx + dir >= bancoDados.configRanks.length) return;
+        const temp = bancoDados.configRanks[idx];
+        bancoDados.configRanks[idx] = bancoDados.configRanks[idx + dir];
+        bancoDados.configRanks[idx + dir] = temp;
+        renderizarGerenciadorRanks();
+        renderizarPersonagens();
+        salvarDadosLocal();
     }
 
     function adicionarRankConfig() {
@@ -1892,7 +1904,7 @@ ${textoAtual.slice(-6000)}`;
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = `Codice_A_Fenda_v11.0_${getFormattedDate()}.html`;
+        a.download = `Codice_A_Fenda_v11.2_${getFormattedDate()}.html`;
         document.body.appendChild(a); a.click(); document.body.removeChild(a);
         setTimeout(() => URL.revokeObjectURL(url), 1500);
     }
@@ -2454,6 +2466,9 @@ ${textoAtual.slice(-6000)}`;
             if (item.tier && !tierConfig) {
                 tierOptions += `<option value="${item.tier}" selected>${item.tier} (Descontinuado)</option>`;
             }
+
+            const personagensComDom = bancoDados.personagens.filter(p => p.dom && p.dom.trim().toLowerCase() === (item.nome || "").trim().toLowerCase());
+            let personagensHTML = personagensComDom.map(p => `<span class="citation-chip" style="background: var(--primary); color: white; border-color: var(--primary);">${p.nome}</span>`).join(' ');
             
             htmlBuffer += `
             <tr>
@@ -2478,6 +2493,11 @@ ${textoAtual.slice(-6000)}`;
                     <div style="margin-bottom:10px;">${citacoesHTML || "<i>Sem registros.</i>"}</div>
                     <label style="font-size:0.8em; color:#666;">Editar Citações (separar por vírgula):</label>
                     <input type="text" value="${item.citacoes || ''}" onblur="updDom(${i}, 'citacoes', this.value)" style="width:100%; border:1px solid var(--border-color); padding:5px;">
+                    
+                    <div style="margin-top: 15px; padding-top: 10px; border-top: 1px dashed var(--border-color);">
+                        <h4>👥 Personagens com este Dom:</h4>
+                        <div>${personagensHTML || "<i>Nenhum personagem registrado com este dom.</i>"}</div>
+                    </div>
                 </div>
             </td></tr>`;
         });
@@ -2497,6 +2517,7 @@ ${textoAtual.slice(-6000)}`;
     function updDom(i, field, val) { 
         bancoDados.dons[i][field] = val; 
         if (field === 'tier') renderizarDons(); 
+        if (field === 'nome') renderizarDons(); // Re-renderiza para atualizar os vínculos se o nome mudar
     }
 
     // --- RENDERIZAÇÃO LEIS ---
