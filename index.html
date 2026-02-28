@@ -636,23 +636,23 @@
         <div class="demo-grid" id="painelDemografia" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap:10px; margin-bottom:20px;"></div>
         
         <div class="table-wrapper">
-            <table id="tabelaNacoes">
+            <table id="tabelaNacoes" style="table-layout: fixed; word-wrap: break-word;">
                 <thead>
                     <tr>
-                        <th class="sortable" onclick="ordenarTabelaNacoes('nome')">País <span id="sort-nacoes-nome" class="sort-icon"></span></th>
-                        <th class="sortable" onclick="ordenarTabelaNacoes('pct')">% Pop <span id="sort-nacoes-pct" class="sort-icon"></span></th>
-                        <th>População Total</th>
-                        <th title="Contagem real da Aba Personagens">SSS (Real)</th>
-                        <th>SS (Est.)</th>
-                        <th>S (Est.)</th>
-                        <th>A (Est.)</th>
-                        <th>B (Est.)</th>
-                        <th>C (Est.)</th>
-                        <th>D (Est.)</th>
-                        <th>E (Est.)</th>
-                        <th class="sortable" onclick="ordenarTabelaNacoes('poderTotal')">Poder Total (Real + Est.) <span id="sort-nacoes-poderTotal" class="sort-icon"></span></th>
-                        <th width="20%">Política / Notas</th>
-                        <th class="no-print">Ações</th>
+                        <th class="sortable" style="width: 12%;" onclick="ordenarTabelaNacoes('nome')">País <span id="sort-nacoes-nome" class="sort-icon"></span></th>
+                        <th class="sortable" style="width: 7%;" onclick="ordenarTabelaNacoes('pct')">% Pop <span id="sort-nacoes-pct" class="sort-icon"></span></th>
+                        <th style="width: 10%;">População Total</th>
+                        <th style="width: 6%;" title="Contagem real da Aba Personagens">SSS (Real)</th>
+                        <th style="width: 5%;">SS (Est.)</th>
+                        <th style="width: 5%;">S (Est.)</th>
+                        <th style="width: 5%;">A (Est.)</th>
+                        <th style="width: 5%;">B (Est.)</th>
+                        <th style="width: 5%;">C (Est.)</th>
+                        <th style="width: 5%;">D (Est.)</th>
+                        <th style="width: 5%;">E (Est.)</th>
+                        <th class="sortable" style="width: 10%;" onclick="ordenarTabelaNacoes('poderTotal')">Poder Total (Real + Est.) <span id="sort-nacoes-poderTotal" class="sort-icon"></span></th>
+                        <th style="width: 15%;">Política / Notas</th>
+                        <th class="no-print" style="width: 60px;">Ações</th>
                     </tr>
                 </thead>
                 <tbody id="listaNacoes"></tbody>
