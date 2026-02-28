@@ -231,7 +231,7 @@
     }
     
     /* MODAL GERENCIADOR DE DADOS DA ABA E RANKS */
-    #aba-json-modal, #rank-manager-modal {
+    #aba-json-modal, #rank-manager-modal, #tier-manager-modal, #download-manager-modal {
         position: fixed; top: 0; left: 0; right: 0; bottom: 0;
         background: rgba(0,0,0,0.7); z-index: 3000;
         display: none; align-items: center; justify-content: center;
@@ -354,11 +354,8 @@
                 <button class="btn btn-ai" onclick="iaContinuarTexto('textoCapitulo')" title="Continuar a história com IA">✨ IA: Continuar</button>
                 <button class="btn btn-ai" onclick="iaAnalisarTexto('textoCapitulo')" title="Analisar capítulo com IA">✨ IA: Analisar</button>
                 <button class="btn btn-primary" onclick="criarNovoCapituloUI()">+ Capítulo</button>
-                <button class="btn btn-secondary" onclick="baixarLivroJSON()">💾 Baixar Livro</button>
-                <button class="btn btn-info" onclick="baixarDoc('livro')">📝 Baixar .doc</button>
+                <button class="btn btn-info" onclick="abrirGerenciadorDownloads('livro')">📥 Gerenciar Downloads</button>
                 <button class="btn btn-secondary" id="btnA5" onclick="alternarModoA5()" title="Alternar visualização de página">📄 Modo A5</button>
-                <button class="btn btn-warning" onclick="prepararImpressao('capitulo', 'livro')">🖨️ PDF (Cap.)</button>
-                <button class="btn btn-success" onclick="prepararImpressao('completo', 'livro')">📚 PDF (Completo)</button>
             </div>
         </div>
         
@@ -397,9 +394,7 @@
                 <button class="btn btn-ai" onclick="iaAnalisarTexto('textoProjeto')" title="Analisar esboço com IA">✨ IA: Analisar</button>
                 <button class="btn btn-ai" onclick="iaContinuarTexto('textoProjeto')" title="Gerar ideias com IA">✨ IA: Continuar</button>
                 <button class="btn btn-purple" onclick="criarNovoProjetoUI()">+ Esboço</button>
-                <button class="btn btn-secondary" onclick="baixarProjetosJSON()">💾 Baixar Projetos</button>
-                <button class="btn btn-info" onclick="baixarDoc('projeto')">📝 Baixar .doc</button>
-                <button class="btn btn-warning" onclick="prepararImpressao('capitulo', 'projeto')">🖨️ PDF (Atual)</button>
+                <button class="btn btn-info" onclick="abrirGerenciadorDownloads('projeto')">📥 Gerenciar Downloads</button>
             </div>
         </div>
         
@@ -703,7 +698,7 @@
 </div>
 
 <!-- MODAL GERENCIADOR DE TIERS (DONS) -->
-<div id="tier-manager-modal" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 3000; display: none; align-items: center; justify-content: center;">
+<div id="tier-manager-modal">
     <div class="aba-json-box" style="height: auto;">
         <div style="display:flex; justify-content:space-between; align-items:center;">
             <h3 style="margin:0; color:var(--accent);">🎖️ Gerenciador de Tiers (Dons)</h3>
@@ -719,11 +714,124 @@
     </div>
 </div>
 
+<!-- NOVO MODAL GERENCIADOR DE DOWNLOADS (LIVRO/PROJETOS) -->
+<div id="download-manager-modal">
+    <div class="aba-json-box" style="height: auto; max-height: 90vh;">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <h3 style="margin:0; color:var(--accent);">📥 Gerenciador de Downloads</h3>
+            <button class="btn btn-danger btn-sm" onclick="fecharGerenciadorDownloads()">X</button>
+        </div>
+        
+        <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom: 10px;" id="download-modal-actions">
+            <button class="btn btn-secondary" onclick="executarDownloadContexto('json')">💾 Baixar JSON</button>
+            <button class="btn btn-info" onclick="executarDownloadContexto('doc')">📝 Baixar .doc</button>
+            <button class="btn btn-warning" onclick="executarDownloadContexto('pdf-cap')">🖨️ PDF (Atual)</button>
+            <button class="btn btn-success" id="btn-pdf-completo-modal" onclick="executarDownloadContexto('pdf-completo')">📚 PDF (Completo)</button>
+        </div>
+
+        <hr style="border: 1px dashed var(--border-color); width: 100%; margin: 10px 0;">
+
+        <h4 style="margin: 0 0 10px 0;">📄 Exportar TXT Customizado</h4>
+        <p style="font-size:0.85em; opacity:0.8; margin:0 0 10px 0;">Selecione os capítulos/esboços que deseja incluir no arquivo de texto:</p>
+        <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+            <button class="btn btn-sm btn-secondary" onclick="marcarTodosDownloads(true)">Marcar Todos</button>
+            <button class="btn btn-sm btn-secondary" onclick="marcarTodosDownloads(false)">Desmarcar Todos</button>
+        </div>
+        <div id="lista-download-txt" style="max-height: 30vh; overflow-y: auto; background: rgba(0,0,0,0.05); padding: 10px; border-radius: 4px; border: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 5px;">
+            <!-- Checkboxes populated via JS -->
+        </div>
+        <button class="btn btn-primary" style="margin-top: 10px;" onclick="baixarTxtSelecionados()">⬇️ Baixar TXT Selecionados</button>
+    </div>
+</div>
+
 <div id="dynamic-contents"></div>
 
 <script id="dados-injetados"></script>
 
 <script>
+    // --- LÓGICA DO GERENCIADOR DE DOWNLOADS (LIVRO/PROJETOS) ---
+    let contextoDownloadAtual = 'livro';
+
+    function abrirGerenciadorDownloads(origem) {
+        contextoDownloadAtual = origem;
+        const modal = document.getElementById('download-manager-modal');
+        const listaEl = document.getElementById('lista-download-txt');
+        const btnPdfCompleto = document.getElementById('btn-pdf-completo-modal');
+        
+        listaEl.innerHTML = '';
+        
+        let listaDados = origem === 'livro' ? bancoDados.historia : bancoDados.projetos;
+        let itens = [...listaDados].sort(naturalSort);
+
+        if (origem === 'livro') {
+            btnPdfCompleto.style.display = 'inline-block';
+        } else {
+            btnPdfCompleto.style.display = 'none';
+        }
+
+        itens.forEach(item => {
+            listaEl.innerHTML += `
+                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; border-bottom: 1px solid rgba(0,0,0,0.1); padding-bottom: 5px;">
+                    <input type="checkbox" class="check-download-txt" value="${item.id}" checked>
+                    <span><b>${item.id}</b> - ${item.titulo}</span>
+                </label>
+            `;
+        });
+
+        modal.style.display = 'flex';
+    }
+
+    function fecharGerenciadorDownloads() {
+        document.getElementById('download-manager-modal').style.display = 'none';
+    }
+
+    function executarDownloadContexto(tipo) {
+        if (tipo === 'json') {
+            if (contextoDownloadAtual === 'livro') baixarLivroJSON();
+            else baixarProjetosJSON();
+        } else if (tipo === 'doc') {
+            baixarDoc(contextoDownloadAtual);
+        } else if (tipo === 'pdf-cap') {
+            prepararImpressao('capitulo', contextoDownloadAtual);
+        } else if (tipo === 'pdf-completo') {
+            prepararImpressao('completo', contextoDownloadAtual);
+        }
+    }
+
+    function marcarTodosDownloads(marcar) {
+        document.querySelectorAll('.check-download-txt').forEach(cb => cb.checked = marcar);
+    }
+
+    function baixarTxtSelecionados() {
+        const selecionados = Array.from(document.querySelectorAll('.check-download-txt:checked')).map(cb => cb.value);
+        if (selecionados.length === 0) {
+            alert("Nenhum item selecionado para baixar.");
+            return;
+        }
+
+        let listaDados = contextoDownloadAtual === 'livro' ? bancoDados.historia : bancoDados.projetos;
+        let conteudoFinal = "";
+        const marcador = document.getElementById('marcadorTexto').value;
+
+        [...listaDados].sort(naturalSort).forEach(item => {
+            if (selecionados.includes(item.id)) {
+                conteudoFinal += `========== ${item.id} - ${item.titulo} ==========\n\n`;
+                const linhas = (item.conteudo || "").split('\n');
+                linhas.forEach(linha => {
+                    if (linha.trim() && !linha.trim().startsWith(marcador)) {
+                        conteudoFinal += linha + '\n';
+                    } else if (!linha.trim()) {
+                        conteudoFinal += '\n';
+                    }
+                });
+                conteudoFinal += `\n\n`;
+            }
+        });
+
+        const nomeArquivo = `${contextoDownloadAtual === 'livro' ? 'Livro' : 'Projetos'}_Export_Custom_${getFormattedDate()}.txt`;
+        downloadString(conteudoFinal, "text/plain", nomeArquivo);
+    }
+
     // --- LÓGICA DO GERENCIADOR DE DADOS DA ABA (JSON) ---
     let abaAtualGerenciamento = null;
 
@@ -1296,7 +1404,7 @@ ${textoAtual.slice(-6000)}`;
         btn.innerText = "✨ Fundando...";
         btn.classList.add("loading");
 
-        const desc = prompt("Tipo de organização? (Ex: 'Guilda de Mercenários', 'Governo', 'Culto'). Vazio = Aleatório.");
+        const desc = prompt("Tipo de organization? (Ex: 'Guilda de Mercenários', 'Governo', 'Culto'). Vazio = Aleatório.");
         const context = desc ? `Foco: ${desc}` : "";
 
         const prompt = `Gere uma Organização para o universo 'Códice - A Fenda'.
