@@ -1,7 +1,7 @@
 <html lang="pt-br"><head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Códice - A Fenda (v11.5)</title>
+<title>Códice - A Fenda (v12.1)</title>
 <!-- BIBLIOTECA ADICIONADA PARA DOCX -->
 <script src="https://unpkg.com/html-docx-js/dist/html-docx.js"></script>
 <style>
@@ -270,7 +270,7 @@
 <div id="aba-regras" class="content active">
     <div class="panel">
         <div class="header-row">
-            <h2>Painel de Controle &amp; Protocolo (v11.5)</h2>
+            <h2>Painel de Controle &amp; Protocolo (v12.1)</h2>
             <div>
                 <button class="btn btn-success" onclick="salvarDadosLocal()">💾 Salvar (Navegador)</button>
                 <button class="btn btn-warning" onclick="baixarBackupCompleto()">📦 Baixar TUDO (Backup JSON)</button>
@@ -622,6 +622,7 @@
                 <button class="btn btn-warning" onclick="abrirGerenciadorDadosAba('config')">⚙️ Dados Demo</button>
                 <button class="btn btn-warning" onclick="abrirGerenciadorDadosAba('paises')">⚙️ Dados Países</button>
                 <button class="btn btn-secondary" onclick="baixarTabela('tabelaNacoes', 'Geopolitica')">📊 Baixar Tabela</button>
+                <button class="btn btn-danger" onclick="deletarSelecionados('paises')" title="Apagar marcados">🗑️ Massa</button>
                 <button class="btn btn-primary" onclick="novoPais()">+ País</button>
                 <button class="btn btn-secondary" onclick="resetarPadroes()">Restaurar Padrões</button>
             </div>
@@ -639,6 +640,7 @@
             <table id="tabelaNacoes" style="table-layout: fixed; word-wrap: break-word;">
                 <thead>
                     <tr>
+                        <th class="sortable" style="width: 70px;"><input type="checkbox" onclick="toggleSelecionarTudo(this, 'check-nacao')" title="Todos"> Info</th>
                         <th class="sortable" style="width: 12%;" onclick="ordenarTabelaNacoes('nome')">País <span id="sort-nacoes-nome" class="sort-icon"></span></th>
                         <th class="sortable" style="width: 7%;" onclick="ordenarTabelaNacoes('pct')">% Pop <span id="sort-nacoes-pct" class="sort-icon"></span></th>
                         <th style="width: 10%;">População Total</th>
@@ -1914,7 +1916,7 @@ ${textoAtual.slice(-6000)}`;
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = `Codice_A_Fenda_v11.5_${getFormattedDate()}.html`;
+        a.download = `Codice_A_Fenda_v12.1_${getFormattedDate()}.html`;
         document.body.appendChild(a); a.click(); document.body.removeChild(a);
         setTimeout(() => URL.revokeObjectURL(url), 1500);
     }
@@ -2696,14 +2698,23 @@ ${textoAtual.slice(-6000)}`;
         // A ordenação manual via ordenarTabelaNacoes assume o controle agora
 
         bancoDados.paises.forEach((paisObj, index) => {
+            if(!Array.isArray(paisObj.lideres)) paisObj.lideres = [];
+            if(!Array.isArray(paisObj.vassalos)) paisObj.vassalos = [];
+            if(!Array.isArray(paisObj.hierarquia)) paisObj.hierarquia = [];
+
             const pais = paisObj.nome;
             const pct = paisObj.pct;
             const popPais = Math.floor(popTotal * pct);
             const sssChars = bancoDados.personagens.filter(p => p.pais === pais && p.rank && p.rank.trim().toUpperCase() === 'SSS');
             const sssCount = sssChars.length;
             const sssPower = sssChars.reduce((sum, p) => sum + parseInt(p.np || 0), 0);
+            const infoCount = paisObj.lideres.length + paisObj.vassalos.length + paisObj.hierarquia.length;
 
             let row = `<tr>
+                <td style="white-space:nowrap;">
+                    <input type="checkbox" class="check-nacao" value="${index}" style="width:auto; margin-right:5px;">
+                    <span style="cursor:pointer" onclick="toggleDetalhesNacao(${index})">➕ <span class="badge-info">${infoCount}</span></span>
+                </td>
                 <td contenteditable="true" class="editable" onblur="updPais(${index}, 'nome', this.innerText)"><b>${pais}</b></td>
                 <td contenteditable="true" class="editable" onblur="updPais(${index}, 'pct', this.innerText)">${(pct*100).toFixed(4)}%</td>
                 <td class="number-cell">${popPais.toLocaleString('pt-BR')}</td>
@@ -2721,8 +2732,97 @@ ${textoAtual.slice(-6000)}`;
                     <td contenteditable="true" class="editable" onblur="salvarInfoNacao('${pais}', 'politica', this.innerText)">${info.politica}</td>
                     <td class="no-print"><button class="btn btn-danger btn-sm" onclick="delItem('paises', ${index})">X</button></td>
                 </tr>`;
+
+            row += `<tr id="detalhe-nacao-${index}" style="display:none" class="org-detail-row"><td colspan="15">
+                <div class="char-detail-container">
+                    <div class="org-detail-grid">
+                        <div>
+                            <h4>👑 Líderes</h4>
+                            <div class="timeline-box">
+                                ${[...paisObj.lideres].reverse().map((l, idx) => `
+                                    <div class="timeline-item">
+                                        <div class="timeline-date" contenteditable="true" onblur="updateDetailNacao(${index}, 'lideres', ${paisObj.lideres.length-1-idx}, 'data', this.innerText)">${l.data||'-'}</div>
+                                        <div class="timeline-content">
+                                            <b contenteditable="true" onblur="updateDetailNacao(${index}, 'lideres', ${paisObj.lideres.length-1-idx}, 'nome', this.innerText)">${l.nome}</b><br>
+                                            <small contenteditable="true" onblur="updateDetailNacao(${index}, 'lideres', ${paisObj.lideres.length-1-idx}, 'hist', this.innerText)">${l.hist}</small>
+                                            <button class="btn-del-mini" onclick="deleteDetailNacao(${index}, 'lideres', ${paisObj.lideres.length-1-idx})">x</button>
+                                        </div>
+                                    </div>`).join('')}
+                            </div>
+                            <button class="btn btn-sm btn-secondary" style="margin-top:5px;" onclick="addNacaoLider(${index})">+ Líder</button>
+                        </div>
+                        <div>
+                            <h4>👥 Vassalos/Representantes</h4>
+                            <div class="timeline-box">
+                                ${[...paisObj.vassalos].reverse().map((v, idx) => `
+                                    <div class="timeline-item">
+                                        <div class="timeline-date" contenteditable="true" onblur="updateDetailNacao(${index}, 'vassalos', ${paisObj.vassalos.length-1-idx}, 'data', this.innerText)">${v.data||'-'}</div>
+                                        <div class="timeline-content">
+                                            <b contenteditable="true" onblur="updateDetailNacao(${index}, 'vassalos', ${paisObj.vassalos.length-1-idx}, 'nome', this.innerText)">${v.nome}</b> - 
+                                            <span contenteditable="true" onblur="updateDetailNacao(${index}, 'vassalos', ${paisObj.vassalos.length-1-idx}, 'cargo', this.innerText)">${v.cargo}</span>
+                                            <button class="btn-del-mini" onclick="deleteDetailNacao(${index}, 'vassalos', ${paisObj.vassalos.length-1-idx})">x</button>
+                                        </div>
+                                    </div>`).join('')}
+                            </div>
+                            <button class="btn btn-sm btn-secondary" style="margin-top:5px;" onclick="addNacaoVassalo(${index})">+ Nobre/Rep.</button>
+                        </div>
+                        <div>
+                            <h4>📜 Política & Hierarquia</h4>
+                            <div class="timeline-box">
+                                ${[...paisObj.hierarquia].reverse().map((h, idx) => `
+                                    <div class="timeline-item">
+                                        <div class="timeline-date" contenteditable="true" onblur="updateDetailNacao(${index}, 'hierarquia', ${paisObj.hierarquia.length-1-idx}, 'data', this.innerText)">${h.data}</div>
+                                        <div class="timeline-content">
+                                            <span contenteditable="true" onblur="updateDetailNacao(${index}, 'hierarquia', ${paisObj.hierarquia.length-1-idx}, 'regra', this.innerText)">${h.regra}</span>
+                                            <button class="btn-del-mini" onclick="deleteDetailNacao(${index}, 'hierarquia', ${paisObj.hierarquia.length-1-idx})">x</button>
+                                        </div>
+                                    </div>`).join('')}
+                            </div>
+                            <button class="btn btn-sm btn-secondary" style="margin-top:5px;" onclick="addNacaoHierarquia(${index})">+ Regra/Estrutura</button>
+                        </div>
+                    </div>
+                </div>
+            </td></tr>`;
+            
             tbody.innerHTML += row;
         });
+    }
+
+    function toggleDetalhesNacao(i) {
+        let el = document.getElementById(`detalhe-nacao-${i}`);
+        el.style.display = el.style.display === 'none' ? 'table-row' : 'none';
+    }
+
+    function updateDetailNacao(paisIndex, type, itemIndex, field, newValue) {
+        bancoDados.paises[paisIndex][type][itemIndex][field] = newValue;
+        renderizarNacoes(); 
+    }
+
+    function deleteDetailNacao(paisIndex, type, itemIndex) {
+        if(confirm("Deletar este item geopolítico?")) {
+            bancoDados.paises[paisIndex][type].splice(itemIndex, 1);
+            renderizarNacoes();
+        }
+    }
+
+    function addNacaoLider(i) {
+        const d = prompt("Período (Ex: 2020 - Atual):", document.getElementById('dataAtual').value);
+        const nome = prompt("Nome do Líder:");
+        const hist = prompt("História/Feitos principais:");
+        if(nome) { bancoDados.paises[i].lideres.push({data:d, nome:nome, hist:hist}); renderizarNacoes(); }
+    }
+
+    function addNacaoVassalo(i) {
+        const d = prompt("Data/Época:", document.getElementById('dataAtual').value);
+        const nome = prompt("Nome do Nobre/Representante:");
+        const cargo = prompt("Cargo/Função:");
+        if(nome) { bancoDados.paises[i].vassalos.push({data:d, nome:nome, cargo:cargo}); renderizarNacoes(); }
+    }
+
+    function addNacaoHierarquia(i) {
+        const d = prompt("Data/Época:", document.getElementById('dataAtual').value);
+        const regra = prompt("Regra/Estrutura Política:");
+        if(regra) { bancoDados.paises[i].hierarquia.push({data:d, regra:regra}); renderizarNacoes(); }
     }
 
     function updPais(index, field, val) {
@@ -3287,6 +3387,11 @@ ${textoAtual.slice(-6000)}`;
             classeCheckbox = 'check-dom'; 
             arrayAlvo = 'dons'; 
             nomeAmigavel = "dons";
+        }
+        else if (tipo === 'paises') { 
+            classeCheckbox = 'check-nacao'; 
+            arrayAlvo = 'paises'; 
+            nomeAmigavel = "países";
         }
         
         const checkboxes = document.querySelectorAll(`.${classeCheckbox}:checked`);
