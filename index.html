@@ -645,9 +645,9 @@
                         <th class="sortable" style="width: 7%;" onclick="ordenarTabelaNacoes('pct')">% Pop <span id="sort-nacoes-pct" class="sort-icon"></span></th>
                         <th style="width: 10%;">População Total</th>
                         <th style="width: 6%;" title="Contagem real da Aba Personagens">SSS (Real)</th>
-                        <th style="width: 5%;">SS (Est.)</th>
-                        <th style="width: 5%;">S (Est.)</th>
-                        <th style="width: 5%;">A (Est.)</th>
+                        <th style="width: 5%;" title="Soma dos reais com a estimativa">SS (Est.+Real)</th>
+                        <th style="width: 5%;" title="Soma dos reais com a estimativa">S (Est.+Real)</th>
+                        <th style="width: 5%;" title="Soma dos reais com a estimativa">A (Est.+Real)</th>
                         <th style="width: 5%;">B (Est.)</th>
                         <th style="width: 5%;">C (Est.)</th>
                         <th style="width: 5%;">D (Est.)</th>
@@ -2148,11 +2148,17 @@ ${textoAtual.slice(-6000)}`;
             if (coluna === 'poderTotal') {
                 let popA = Math.floor(popTotal * a.pct);
                 let pwrA = bancoDados.personagens.filter(p => p.pais === a.nome && p.rank && p.rank.trim().toUpperCase() === 'SSS').reduce((sum, p) => sum + parseInt(p.np || 0), 0);
-                ranks.forEach(r => pwrA += Math.floor(popA / raridades[r].taxa) * raridades[r].np);
+                ranks.forEach(r => {
+                    pwrA += Math.floor(popA / raridades[r].taxa) * raridades[r].np;
+                    if (["SS", "S", "A"].includes(r)) pwrA += bancoDados.personagens.filter(p => p.pais === a.nome && p.rank && p.rank.trim().toUpperCase() === r).reduce((sum, p) => sum + parseInt(p.np || 0), 0);
+                });
 
                 let popB = Math.floor(popTotal * b.pct);
                 let pwrB = bancoDados.personagens.filter(p => p.pais === b.nome && p.rank && p.rank.trim().toUpperCase() === 'SSS').reduce((sum, p) => sum + parseInt(p.np || 0), 0);
-                ranks.forEach(r => pwrB += Math.floor(popB / raridades[r].taxa) * raridades[r].np);
+                ranks.forEach(r => {
+                    pwrB += Math.floor(popB / raridades[r].taxa) * raridades[r].np;
+                    if (["SS", "S", "A"].includes(r)) pwrB += bancoDados.personagens.filter(p => p.pais === b.nome && p.rank && p.rank.trim().toUpperCase() === r).reduce((sum, p) => sum + parseInt(p.np || 0), 0);
+                });
 
                 return (pwrA - pwrB) * estadoOrdenacaoNacoes.direcao;
             }
@@ -2722,9 +2728,20 @@ ${textoAtual.slice(-6000)}`;
                 
             let poderTotal = sssPower; 
             ranks.forEach(rank => {
-                const count = Math.floor(popPais / raridades[rank].taxa);
-                poderTotal += count * raridades[rank].np;
-                row += `<td class="number-cell">${count.toLocaleString('pt-BR')}</td>`;
+                let estCount = Math.floor(popPais / raridades[rank].taxa);
+                let estPower = estCount * raridades[rank].np;
+                let realCount = 0;
+                let realPower = 0;
+
+                if (["SS", "S", "A"].includes(rank)) {
+                    const reais = bancoDados.personagens.filter(p => p.pais === pais && p.rank && p.rank.trim().toUpperCase() === rank);
+                    realCount = reais.length;
+                    realPower = reais.reduce((sum, p) => sum + parseInt(p.np || 0), 0);
+                }
+
+                poderTotal += estPower + realPower;
+                let displayCount = estCount + realCount;
+                row += `<td class="number-cell">${displayCount.toLocaleString('pt-BR')}</td>`;
             });
             let poderFmt = poderTotal > 1e9 ? (poderTotal/1e9).toFixed(1) + " B" : poderTotal.toLocaleString('pt-BR');
             const info = bancoDados.nacoesInfo[pais] || { politica: "" };
