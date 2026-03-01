@@ -1,7 +1,7 @@
 <html lang="pt-br"><head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Códice - A Fenda (v15.1)</title>
+<title>Códice - A Fenda (v15.3)</title>
 <!-- BIBLIOTECA ADICIONADA PARA DOCX -->
 <script src="https://unpkg.com/html-docx-js/dist/html-docx.js"></script>
 <style>
@@ -284,7 +284,7 @@
 <div id="aba-regras" class="content active">
     <div class="panel">
         <div class="header-row">
-            <h2>Painel de Controle &amp; Protocolo (v15.2)</h2>
+            <h2>Painel de Controle &amp; Protocolo (v15.3)</h2>
             <div>
                 <button class="btn btn-success" onclick="salvarDadosLocal()">💾 Salvar (Navegador)</button>
                 <button class="btn btn-warning" onclick="baixarBackupCompleto()">📦 Baixar TUDO (Backup JSON)</button>
@@ -375,8 +375,9 @@
         
         <div class="book-layout">
             <div class="book-sidebar">
-                <div style="padding:10px; background:var(--bg-panel); border-bottom:1px solid var(--border-color);">
-                    <input type="text" id="buscaCapitulo" placeholder="🔍 Buscar..." onkeyup="filtrarCapitulos()">
+                <div style="padding:10px; background:var(--bg-panel); border-bottom:1px solid var(--border-color); display: flex; flex-direction: column; gap: 5px;">
+                    <input type="text" id="buscaCapituloNome" placeholder="🔍 Buscar Título/ID..." onkeyup="renderizarListaCapitulos()" style="margin:0;">
+                    <input type="text" id="buscaCapituloDesc" placeholder="🔍 Buscar no Texto..." onkeyup="renderizarListaCapitulos()" style="margin:0;">
                 </div>
                 <div id="listaCapitulos"></div>
             </div>
@@ -414,8 +415,9 @@
         
         <div class="book-layout">
             <div class="book-sidebar">
-                <div style="padding:10px; background:var(--bg-panel); border-bottom:1px solid var(--border-color);">
-                    <input type="text" id="buscaProjetos" placeholder="🔍 Buscar Ideias..." onkeyup="filtrarProjetos()">
+                <div style="padding:10px; background:var(--bg-panel); border-bottom:1px solid var(--border-color); display: flex; flex-direction: column; gap: 5px;">
+                    <input type="text" id="buscaProjetosNome" placeholder="🔍 Buscar Ideia/ID..." onkeyup="renderizarListaProjetos()" style="margin:0;">
+                    <input type="text" id="buscaProjetosDesc" placeholder="🔍 Buscar no Texto..." onkeyup="renderizarListaProjetos()" style="margin:0;">
                 </div>
                 <div id="listaProjetos"></div>
             </div>
@@ -746,7 +748,7 @@
 </div>
 
 <!-- MODAL GERENCIADOR DE TIERS (DONS) -->
-<div id="tier-manager-modal">
+<div id="tier-manager-modal" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 3000; display: none; align-items: center; justify-content: center;">
     <div class="aba-json-box" style="height: auto;">
         <div style="display:flex; justify-content:space-between; align-items:center;">
             <h3 style="margin:0; color:var(--accent);">🎖️ Gerenciador de Tiers (Dons)</h3>
@@ -1452,7 +1454,7 @@ ${textoAtual.slice(-6000)}`;
         btn.innerText = "✨ Fundando...";
         btn.classList.add("loading");
 
-        const desc = prompt("Tipo de organization? (Ex: 'Guilda de Mercenários', 'Governo', 'Culto'). Vazio = Aleatório.");
+        const desc = prompt("Tipo de organização? (Ex: 'Guilda de Mercenários', 'Governo', 'Culto'). Vazio = Aleatório.");
         const context = desc ? `Foco: ${desc}` : "";
 
         const prompt = `Gere uma Organização para o universo 'Códice - A Fenda'.
@@ -1891,12 +1893,17 @@ ${textoAtual.slice(-6000)}`;
 
     function renderizarListaCapitulos() {
         const lista = document.getElementById('listaCapitulos');
-        const filtro = document.getElementById('buscaCapitulo').value.toLowerCase();
+        const termoNome = (document.getElementById('buscaCapituloNome')?.value || "").toLowerCase();
+        const termoDesc = (document.getElementById('buscaCapituloDesc')?.value || "").toLowerCase();
+        
         lista.innerHTML = '';
         if(!Array.isArray(bancoDados.historia)) bancoDados.historia = [];
         bancoDados.historia.sort(naturalSort);
+        
         bancoDados.historia.forEach(cap => {
-            if(filtro && !cap.titulo.toLowerCase().includes(filtro) && !cap.id.includes(filtro)) return;
+            if(termoNome && !(cap.titulo.toLowerCase().includes(termoNome) || cap.id.toLowerCase().includes(termoNome))) return;
+            if(termoDesc && !(cap.conteudo || "").toLowerCase().includes(termoDesc)) return;
+            
             const div = document.createElement('div');
             div.className = 'chapter-list-item';
             
@@ -1914,7 +1921,12 @@ ${textoAtual.slice(-6000)}`;
             if(capituloAtualId === cap.id) div.classList.add('active');
             lista.appendChild(div);
         });
-        if(!capituloAtualId && bancoDados.historia.length > 0) carregarCapituloNoEditor(bancoDados.historia[0].id);
+        
+        if(!capituloAtualId && bancoDados.historia.length > 0 && !termoNome && !termoDesc) {
+            carregarCapituloNoEditor(bancoDados.historia[0].id);
+        }
+        
+        aplicarHighlight('listaCapitulos', [termoNome]);
     }
 
     function carregarCapituloNoEditor(id) {
@@ -1979,13 +1991,17 @@ ${textoAtual.slice(-6000)}`;
     // --- LÓGICA DA ABA PROJETOS (IDEIAS) - CÓPIA FUNCIONAL DO LIVRO ---
     function renderizarListaProjetos() {
         const lista = document.getElementById('listaProjetos');
-        const filtro = document.getElementById('buscaProjetos').value.toLowerCase();
+        const termoNome = (document.getElementById('buscaProjetosNome')?.value || "").toLowerCase();
+        const termoDesc = (document.getElementById('buscaProjetosDesc')?.value || "").toLowerCase();
+        
         lista.innerHTML = '';
         if(!Array.isArray(bancoDados.projetos)) bancoDados.projetos = [];
         bancoDados.projetos.sort(naturalSort);
         
         bancoDados.projetos.forEach(proj => {
-            if(filtro && !proj.titulo.toLowerCase().includes(filtro) && !proj.id.includes(filtro)) return;
+            if(termoNome && !(proj.titulo.toLowerCase().includes(termoNome) || proj.id.toLowerCase().includes(termoNome))) return;
+            if(termoDesc && !(proj.conteudo || "").toLowerCase().includes(termoDesc)) return;
+            
             const div = document.createElement('div');
             div.className = 'chapter-list-item';
             div.innerHTML = `<span style="color:var(--proj-color); font-weight:bold;">${proj.id}</span> - ${proj.titulo}`;
@@ -1993,7 +2009,12 @@ ${textoAtual.slice(-6000)}`;
             div.onclick = () => carregarProjetoNoEditor(proj.id);
             lista.appendChild(div);
         });
-        if(!projetoAtualId && bancoDados.projetos.length > 0) carregarProjetoNoEditor(bancoDados.projetos[0].id);
+        
+        if(!projetoAtualId && bancoDados.projetos.length > 0 && !termoNome && !termoDesc) {
+            carregarProjetoNoEditor(bancoDados.projetos[0].id);
+        }
+        
+        aplicarHighlight('listaProjetos', [termoNome]);
     }
 
     function carregarProjetoNoEditor(id) {
@@ -2099,7 +2120,7 @@ ${textoAtual.slice(-6000)}`;
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = `Codice_A_Fenda_v15.1_${getFormattedDate()}.html`;
+        a.download = `Codice_A_Fenda_v15.3_${getFormattedDate()}.html`;
         document.body.appendChild(a); a.click(); document.body.removeChild(a);
         setTimeout(() => URL.revokeObjectURL(url), 1500);
     }
@@ -3411,12 +3432,17 @@ ${textoAtual.slice(-6000)}`;
 
     function renderizarListaCapitulos() {
         const lista = document.getElementById('listaCapitulos');
-        const filtro = document.getElementById('buscaCapitulo').value.toLowerCase();
+        const termoNome = (document.getElementById('buscaCapituloNome')?.value || "").toLowerCase();
+        const termoDesc = (document.getElementById('buscaCapituloDesc')?.value || "").toLowerCase();
+        
         lista.innerHTML = '';
         if(!Array.isArray(bancoDados.historia)) bancoDados.historia = [];
         bancoDados.historia.sort(naturalSort);
+        
         bancoDados.historia.forEach(cap => {
-            if(filtro && !cap.titulo.toLowerCase().includes(filtro) && !cap.id.includes(filtro)) return;
+            if(termoNome && !(cap.titulo.toLowerCase().includes(termoNome) || cap.id.toLowerCase().includes(termoNome))) return;
+            if(termoDesc && !(cap.conteudo || "").toLowerCase().includes(termoDesc)) return;
+            
             const div = document.createElement('div');
             div.className = 'chapter-list-item';
             
@@ -3434,169 +3460,159 @@ ${textoAtual.slice(-6000)}`;
             if(capituloAtualId === cap.id) div.classList.add('active');
             lista.appendChild(div);
         });
-        if(!capituloAtualId && bancoDados.historia.length > 0) carregarCapituloNoEditor(bancoDados.historia[0].id);
+        
+        if(!capituloAtualId && bancoDados.historia.length > 0 && !termoNome && !termoDesc) {
+            carregarCapituloNoEditor(bancoDados.historia[0].id);
+        }
+        
+        aplicarHighlight('listaCapitulos', [termoNome]);
     }
 
-    // --- NOVA FUNÇÃO DE PROCESSAMENTO DE ENTIDADES ---
-    async function iaProcessarEntidades(capId) {
-        const cap = bancoDados.historia.find(c => c.id === capId);
-        if(!cap || !cap.conteudo || cap.conteudo.length < 50) {
-            alert("Capítulo vazio ou muito curto para processar.");
-            return;
-        }
+    function carregarCapituloNoEditor(id) {
+        if(capituloAtualId && capituloAtualId !== id) salvarConteudoCapitulo();
+        capituloAtualId = id;
+        const cap = bancoDados.historia.find(c => c.id === id);
+        if(!cap) return;
+        document.getElementById('editorId').value = cap.id;
+        document.getElementById('editorTitulo').value = cap.titulo || '';
+        document.getElementById('textoCapitulo').value = cap.conteudo || '';
+        document.getElementById('printTitle').innerText = `${cap.id} - ${cap.titulo}`;
+        atualizarContador();
+        renderizarListaCapitulos();
+    }
 
-        const btn = event.target;
-        const originalText = btn.innerText;
-        btn.innerText = "⏳";
-        btn.classList.add("loading");
+    function salvarConteudoCapitulo() {
+        if(!capituloAtualId) return;
+        const cap = bancoDados.historia.find(c => c.id === capituloAtualId);
+        if(cap) { cap.conteudo = document.getElementById('textoCapitulo').value; atualizarContador(); }
+    }
 
-        // Contexto mínimo para a IA identificar nomes
-        const nomesChars = bancoDados.personagens.map(p => p.nome).join(", ");
-        const nomesOrgs = bancoDados.organizacoes.map(o => o.nome).join(", ");
-
-        const prompt = `Analise o texto do Capítulo ${cap.id} ("${cap.titulo}") do livro 'Códice - A Fenda'.
-        
-        SEU OBJETIVO: Rastrear profundamente a evolução dos personagens e do mundo.
-        
-        BASE DE DADOS ATUAL:
-        - Personagens: ${nomesChars}
-        - Organizações: ${nomesOrgs}
-
-        TEXTO DO CAPÍTULO:
-        ${cap.conteudo.slice(0, 15000)}
-
-        SAÍDA ESPERADA (JSON ESTRITO):
-        Retorne APENAS um JSON. Para cada personagem que apareceu e teve relevância, preencha todos os campos.
-        {
-            "personagens": [
-                { 
-                    "nome": "Nome Exato", 
-                    "data": "${getFormattedDate().split('_')[0]}",
-                    "personalidade_traco": "Traço dominante ou emoção principal demonstrada neste capítulo",
-                    "inventario_itens": "Lista de itens importantes que ele usou ou adquiriu neste capítulo",
-                    "aparencia_detalhe": "Como ele estava vestido ou mudanças físicas notadas neste capítulo",
-                    "relacionamentos_resumo": "Resumo das interações sociais e sentimentos por outros neste capítulo",
-                    "evento_resumo": "Resumo completo da participação do personagem no capítulo (O que ele fez, o que sofreu, resultado)"
-                }
-            ],
-            "organizacoes": [
-                { "nome": "Nome Exato", "acao": "O que a org fez ou como foi citada", "data": "${getFormattedDate().split('_')[0]}" }
-            ],
-            "leis_fisica": [
-                { "tipo": "lei" ou "fisica", "nome_ou_regra": "Nome da Lei ou Regra", "citacao": "Breve contexto de uso" }
-            ]
-        }`;
-
-        try {
-            const jsonStr = await queryGemini(prompt, true);
-            if(jsonStr) {
-                const cleanJson = jsonStr.replace(/```json/g, '').replace(/```/g, '').trim();
-                const dadosExtraidos = JSON.parse(cleanJson);
-                
-                let relatorio = `RELATÓRIO DE ATUALIZAÇÃO (Cap ${capId}):\n\n`;
-
-                // 1. Atualizar Personagens (COMPLETO)
-                if(dadosExtraidos.personagens) {
-                    dadosExtraidos.personagens.forEach(item => {
-                        const char = bancoDados.personagens.find(p => p.nome.toLowerCase() === item.nome.toLowerCase() || p.nome.includes(item.nome));
-                        if(char) {
-                            // Garante arrays
-                            if(!char.personalidade) char.personalidade = [];
-                            if(!char.inventario) char.inventario = [];
-                            if(!char.aparencia) char.aparencia = [];
-                            if(!char.relacionamentos) char.relacionamentos = [];
-                            if(!char.eventos) char.eventos = [];
-
-                            const ctx = `(Cap ${capId})`;
-
-                            // Adiciona dados se não estiverem vazios/nulos
-                            if(item.personalidade_traco) {
-                                char.personalidade.push({ data: item.data, traco: item.personalidade_traco, desc: `${ctx} Estado dominante.` });
-                            }
-                            if(item.inventario_itens) {
-                                char.inventario.push({ data: item.data, item: "Itens do Capítulo", desc: `${ctx} ${item.inventario_itens}` });
-                            }
-                            if(item.aparencia_detalhe) {
-                                char.aparencia.push({ data: item.data, traço: "Visual do Capítulo", desc: `${ctx} ${item.aparencia_detalhe}` });
-                            }
-                            if(item.relacionamentos_resumo) {
-                                char.relacionamentos.push({ data: item.data, alvo: "Interações", sentimento: "Variado", motivo: `${ctx} ${item.relacionamentos_resumo}` });
-                            }
-                            if(item.evento_resumo) {
-                                char.eventos.push({ data: item.data, desc: `${ctx} ${item.evento_resumo}` });
-                            }
-
-                            relatorio += `✅ [Pers] ${char.nome}: Atualizado (Psique, Inv, Look, Rel, Evento).\n`;
-                        }
-                    });
-                }
-
-                // 2. Atualizar Organizações
-                if(dadosExtraidos.organizacoes) {
-                    dadosExtraidos.organizacoes.forEach(item => {
-                        const org = bancoDados.organizacoes.find(o => o.nome.toLowerCase() === item.nome.toLowerCase() || o.nome.includes(item.nome));
-                        if(org) {
-                            if(!org.historico) org.historico = [];
-                            const jaExiste = org.historico.some(h => h.evento === item.acao && h.data === item.data);
-                            if(!jaExiste) {
-                                org.historico.push({ data: item.data, evento: `(Cap ${capId}) ${item.acao}` });
-                                // Atualiza Citações
-                                const citacoes = (org.citacoes || "").split(',').map(s=>s.trim()).filter(s=>s);
-                                if(!citacoes.includes(capId)) {
-                                    citacoes.push(capId);
-                                    org.citacoes = citacoes.join(', ');
-                                }
-                                relatorio += `✅ [Org] ${org.nome}: Histórico atualizado.\n`;
-                            }
-                        }
-                    });
-                }
-
-                // 3. Atualizar Leis e Física (Apenas Citações)
-                if(dadosExtraidos.leis_fisica) {
-                    dadosExtraidos.leis_fisica.forEach(item => {
-                        let lista = item.tipo === 'lei' ? bancoDados.leis : bancoDados.fisica;
-                        let campoBusca = item.tipo === 'lei' ? 'nome' : 'regra';
-                        
-                        const obj = lista.find(x => x[campoBusca] && (x[campoBusca].toLowerCase().includes(item.nome_ou_regra.toLowerCase()) || item.nome_ou_regra.toLowerCase().includes(x[campoBusca].toLowerCase())));
-                        
-                        if(obj) {
-                            const citacoes = (obj.citacoes || "").split(',').map(s=>s.trim()).filter(s=>s);
-                            if(!citacoes.includes(capId)) {
-                                citacoes.push(capId);
-                                obj.citacoes = citacoes.join(', ');
-                                relatorio += `✅ [${item.tipo.toUpperCase()}] ${obj[campoBusca]}: Citação vinculada.\n`;
-                            }
-                        }
-                    });
-                }
-
-                renderizarTudo();
-                alert(relatorio || "Nenhuma entidade conhecida foi detectada para atualização.");
+    function atualizarMetaCapitulo() {
+        if(!capituloAtualId) return;
+        const novoId = document.getElementById('editorId').value.trim();
+        const novoTitulo = document.getElementById('editorTitulo').value;
+        const cap = bancoDados.historia.find(c => c.id === capituloAtualId);
+        if(cap) {
+            if(novoId !== cap.id) {
+                if(bancoDados.historia.find(c => c.id === novoId)) { alert('Erro: Já existe um capítulo com este ID!'); document.getElementById('editorId').value = cap.id; return; }
+                cap.id = novoId; capituloAtualId = novoId;
             }
-        } catch(e) {
-            console.error(e);
-            alert("Erro ao processar entidades: " + e.message);
+            cap.titulo = novoTitulo; renderizarListaCapitulos();
         }
-
-        btn.innerText = originalText;
-        btn.classList.remove("loading");
     }
 
-    // --- NOVA FUNÇÃO DE RESET DE PERSONAGEM ---
-    function resetarPersonagem(index) {
-        const p = bancoDados.personagens[index];
-        if(confirm(`ATENÇÃO: Você está prestes a apagar TODO o histórico de ${p.nome}.\n\nIsso limpará:\n- Personalidade\n- Inventário\n- Aparência\n- Relacionamentos\n- Eventos\n\nDados vitais (Nome, Rank, NP) serão mantidos.\n\nContinuar?`)) {
-            p.personalidade = [];
-            p.inventario = [];
-            p.aparencia = [];
-            p.relacionamentos = [];
-            p.eventos = [];
-            renderizarPersonagens();
-            alert(`${p.nome} foi resetado(a) com sucesso.`);
+    function criarNovoCapituloUI() {
+        const id = prompt("Digite o ID do novo capítulo (ex: 1.5, 2.1.3):");
+        if(!id) return;
+        if(bancoDados.historia.find(c => c.id === id)) { alert("ID já existe!"); return; }
+        const titulo = prompt("Título do Capítulo:");
+        bancoDados.historia.push({ id: id, titulo: titulo || "Sem Título", conteudo: "" });
+        renderizarListaCapitulos();
+        carregarCapituloNoEditor(id);
+    }
+
+    function deletarCapituloAtual() {
+        if(!capituloAtualId) return;
+        if(confirm(`Tem certeza que deseja apagar o capítulo ${capituloAtualId}?`)) {
+            bancoDados.historia = bancoDados.historia.filter(c => c.id !== capituloAtualId);
+            capituloAtualId = null;
+            renderizarListaCapitulos();
+            document.getElementById('editorId').value = "";
+            document.getElementById('editorTitulo').value = "";
+            document.getElementById('textoCapitulo').value = "";
         }
     }
     
+    function atualizarContador() { document.getElementById('contadorChars').innerText = document.getElementById('textoCapitulo').value.length.toLocaleString(); }
+    function filtrarCapitulos() { renderizarListaCapitulos(); }
+
+
+    // --- LÓGICA DA ABA PROJETOS (IDEIAS) - CÓPIA FUNCIONAL DO LIVRO ---
+    function renderizarListaProjetos() {
+        const lista = document.getElementById('listaProjetos');
+        const termoNome = (document.getElementById('buscaProjetosNome')?.value || "").toLowerCase();
+        const termoDesc = (document.getElementById('buscaProjetosDesc')?.value || "").toLowerCase();
+        
+        lista.innerHTML = '';
+        if(!Array.isArray(bancoDados.projetos)) bancoDados.projetos = [];
+        bancoDados.projetos.sort(naturalSort);
+        
+        bancoDados.projetos.forEach(proj => {
+            if(termoNome && !(proj.titulo.toLowerCase().includes(termoNome) || proj.id.toLowerCase().includes(termoNome))) return;
+            if(termoDesc && !(proj.conteudo || "").toLowerCase().includes(termoDesc)) return;
+            
+            const div = document.createElement('div');
+            div.className = 'chapter-list-item';
+            div.innerHTML = `<span style="color:var(--proj-color); font-weight:bold;">${proj.id}</span> - ${proj.titulo}`;
+            if(projetoAtualId === proj.id) div.classList.add('active');
+            div.onclick = () => carregarProjetoNoEditor(proj.id);
+            lista.appendChild(div);
+        });
+        
+        if(!projetoAtualId && bancoDados.projetos.length > 0 && !termoNome && !termoDesc) {
+            carregarProjetoNoEditor(bancoDados.projetos[0].id);
+        }
+        
+        aplicarHighlight('listaProjetos', [termoNome]);
+    }
+
+    function carregarProjetoNoEditor(id) {
+        if(projetoAtualId && projetoAtualId !== id) salvarConteudoProjeto();
+        projetoAtualId = id;
+        const proj = bancoDados.projetos.find(p => p.id === id);
+        if(!proj) return;
+        document.getElementById('editorIdProj').value = proj.id;
+        document.getElementById('editorTituloProj').value = proj.titulo || '';
+        document.getElementById('textoProjeto').value = proj.conteudo || '';
+        atualizarContadorProj();
+        renderizarListaProjetos();
+    }
+
+    function salvarConteudoProjeto() {
+        if(!projetoAtualId) return;
+        const proj = bancoDados.projetos.find(p => p.id === projetoAtualId);
+        if(proj) { proj.conteudo = document.getElementById('textoProjeto').value; atualizarContadorProj(); }
+    }
+
+    function atualizarMetaProjeto() {
+        if(!projetoAtualId) return;
+        const novoId = document.getElementById('editorIdProj').value.trim();
+        const novoTitulo = document.getElementById('editorTituloProj').value;
+        const proj = bancoDados.projetos.find(p => p.id === projetoAtualId);
+        if(proj) {
+            if(novoId !== proj.id) {
+                if(bancoDados.projetos.find(p => p.id === novoId)) { alert('Erro: Já existe um projeto com este ID!'); document.getElementById('editorIdProj').value = proj.id; return; }
+                proj.id = novoId; projetoAtualId = novoId;
+            }
+            proj.titulo = novoTitulo; renderizarListaProjetos();
+        }
+    }
+
+    function criarNovoProjetoUI() {
+        const id = prompt("ID do Projeto/Esboço (ex: Ideia1, P.5, RascunhoA):");
+        if(!id) return;
+        if(bancoDados.projetos.find(p => p.id === id)) { alert("ID já existe!"); return; }
+        const titulo = prompt("Título do Projeto:");
+        bancoDados.projetos.push({ id: id, titulo: titulo || "Nova Ideia", conteudo: "" });
+        renderizarListaProjetos();
+        carregarProjetoNoEditor(id);
+    }
+
+    function deletarProjetoAtual() {
+        if(!projetoAtualId) return;
+        if(confirm(`Tem certeza que deseja apagar o projeto ${projetoAtualId}?`)) {
+            bancoDados.projetos = bancoDados.projetos.filter(p => p.id !== projetoAtualId);
+            projetoAtualId = null;
+            renderizarListaProjetos();
+            document.getElementById('editorIdProj').value = "";
+            document.getElementById('editorTituloProj').value = "";
+            document.getElementById('textoProjeto').value = "";
+        }
+    }
+
+    function atualizarContadorProj() { document.getElementById('contadorCharsProj').innerText = document.getElementById('textoProjeto').value.length.toLocaleString(); }
+    function filtrarProjetos() { renderizarListaProjetos(); }
+
     // --- FUNÇÕES DE SELEÇÃO E DELEÇÃO EM MASSA (NOVAS) ---
     
     // Função para marcar/desmarcar todos os checkboxes
