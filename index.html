@@ -2806,6 +2806,30 @@ ${textoAtual.slice(-6000)}`;
         if (field === 'nome') renderizarDons(); // Re-renderiza para atualizar os vínculos se o nome mudar
     }
 
+    // --- NOVA FUNÇÃO: SINCRONIZAR CITAÇÕES DE DONS ---
+    function sincronizarCitacoesDons() {
+        bancoDados.personagens.forEach(personagem => {
+            if (!personagem.dom || !personagem.nome) return;
+            
+            let donsDoPersonagem = personagem.dom.split(';');
+            donsDoPersonagem.forEach(dom => {
+                let domLimpo = dom.trim();
+                if (domLimpo === "") return;
+                
+                let domNaAba = bancoDados.dons.find(d => d.nome && d.nome.toLowerCase() === domLimpo.toLowerCase());
+                if (domNaAba) {
+                    if (!domNaAba.citacoes) domNaAba.citacoes = "";
+                    let citacoesArray = domNaAba.citacoes.split(',').map(s => s.trim()).filter(s => s !== "");
+                    
+                    if (!citacoesArray.includes(personagem.nome)) {
+                        citacoesArray.push(personagem.nome);
+                        domNaAba.citacoes = citacoesArray.join(', ');
+                    }
+                }
+            });
+        });
+    }
+
     // --- RENDERIZAÇÃO LEIS ---
     function renderizarLeis() {
         const tbody = document.getElementById('listaLeis');
@@ -3140,24 +3164,27 @@ ${textoAtual.slice(-6000)}`;
             renderizarNacoes();
         }
         
-        // --- NOVA LÓGICA DE SINCRONIZAÇÃO DE DONS (ATUALIZADA PARA MÚLTIPLOS DONS) ---
-        if (field === 'dom' && val.trim() !== '') {
-            let donsDoPersonagem = val.split(';');
-            donsDoPersonagem.forEach(domStr => {
-                let domLimpo = domStr.trim();
-                if (domLimpo !== "") {
-                    const domExiste = bancoDados.dons.some(d => d.nome.toLowerCase() === domLimpo.toLowerCase());
-                    if (!domExiste) {
-                        bancoDados.dons.push({
-                            id: `DOM-${Date.now()}_${Math.floor(Math.random() * 1000)}`, 
-                            nome: domLimpo, 
-                            tier: bancoDados.configTiers[0]?.nome || "I", 
-                            desc: "", 
-                            citacoes: ""
-                        });
+        // --- NOVA LÓGICA DE SINCRONIZAÇÃO DE DONS (ATUALIZADA PARA MÚLTIPLOS DONS E CITAÇÕES) ---
+        if (field === 'dom' || field === 'nome') {
+            if (field === 'dom' && val.trim() !== '') {
+                let donsDoPersonagem = val.split(';');
+                donsDoPersonagem.forEach(domStr => {
+                    let domLimpo = domStr.trim();
+                    if (domLimpo !== "") {
+                        const domExiste = bancoDados.dons.some(d => d.nome.toLowerCase() === domLimpo.toLowerCase());
+                        if (!domExiste) {
+                            bancoDados.dons.push({
+                                id: `DOM-${Date.now()}_${Math.floor(Math.random() * 1000)}`, 
+                                nome: domLimpo, 
+                                tier: bancoDados.configTiers[0]?.nome || "I", 
+                                desc: "", 
+                                citacoes: ""
+                            });
+                        }
                     }
-                }
-            });
+                });
+            }
+            sincronizarCitacoesDons(); // Atualiza a lista de nomes nos dons
             renderizarDons(); // Atualiza a aba Dons por trás
         }
 
