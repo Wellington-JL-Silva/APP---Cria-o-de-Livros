@@ -141,6 +141,20 @@
     [data-theme="dark"] .citation-chip { background: #34495e; color: #ecf0f1; border-color: #555; }
     .citation-chip:hover { background: var(--accent); color: white; border-color: var(--accent); cursor: pointer; }
 
+    /* Efeito de Destaque de Pesquisa */
+    .highlight-search {
+        background-color: rgba(241, 196, 15, 0.3);
+        border: 1px solid #f1c40f;
+        box-shadow: 0 0 5px #f1c40f;
+        border-radius: 3px;
+        color: inherit;
+    }
+    [data-theme="dark"] .highlight-search {
+        background-color: rgba(39, 174, 96, 0.3);
+        border: 1px solid #27ae60;
+        box-shadow: 0 0 5px #27ae60;
+    }
+
     /* Estilos Específicos */
     #regrasIA { white-space: pre-wrap; line-height: 1.6; font-size: 1.1em; max-width: 100%; margin: 0 auto; padding: 20px; background: var(--bg-panel); min-height: 500px; box-shadow: 0 0 15px rgba(0,0,0,0.05); border: 1px solid var(--border-color); color: var(--text); }
     .char-detail-container { padding: 20px; border-left: 3px solid var(--accent); background: #f9f9f9; }
@@ -1515,6 +1529,33 @@ ${textoAtual.slice(-6000)}`;
     let estadoOrdenacaoDom = { coluna: null, direcao: 1 };
     let estadoOrdenacaoNacoes = { coluna: null, direcao: 1 };
 
+    // --- HELPER DE HIGHLIGHT VISUAL DE PESQUISA ---
+    function aplicarHighlight(containerId, termos) {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+        termos.forEach(termo => {
+            if (!termo || termo.trim() === '') return;
+            const cleanTermo = termo.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const regex = new RegExp(`(${cleanTermo})`, 'gi');
+            const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT, null, false);
+            const nodesToReplace = [];
+            let node;
+            while (node = walker.nextNode()) {
+                if (node.parentNode && node.parentNode.classList && node.parentNode.classList.contains('highlight-search')) continue;
+                if (regex.test(node.nodeValue)) {
+                    nodesToReplace.push(node);
+                }
+                regex.lastIndex = 0;
+            }
+            nodesToReplace.forEach(n => {
+                const wrapper = document.createElement('span');
+                wrapper.style.display = 'contents';
+                wrapper.innerHTML = n.nodeValue.replace(regex, '<span class="highlight-search">$1</span>');
+                n.parentNode.replaceChild(wrapper, n);
+            });
+        });
+    }
+
     // --- HELPER DATA FORMATADA ---
     function getFormattedDate() {
         const now = new Date();
@@ -2484,6 +2525,7 @@ ${textoAtual.slice(-6000)}`;
         });
         
         tbody.innerHTML = htmlBuffer;
+        aplicarHighlight('listaPersonagens', [termoNome, termoDesc]);
     }
 
     // --- RENDERIZAÇÃO ORGANIZAÇÕES ---
@@ -2583,6 +2625,7 @@ ${textoAtual.slice(-6000)}`;
         });
         
         tbody.innerHTML = htmlBuffer;
+        aplicarHighlight('listaOrganizacoes', [termoNome, termoDesc]);
     }
 
     // --- RENDERIZAÇÃO FÍSICA ---
@@ -2622,6 +2665,7 @@ ${textoAtual.slice(-6000)}`;
             </td></tr>`;
         });
         tbody.innerHTML = htmlBuffer;
+        aplicarHighlight('listaFisica', [termoNome, termoDesc]);
     }
     
     function toggleDetalhesFisica(i) {
@@ -2718,6 +2762,7 @@ ${textoAtual.slice(-6000)}`;
             </td></tr>`;
         });
         tbody.innerHTML = htmlBuffer;
+        aplicarHighlight('listaDons', [termoNome, termoDesc]);
     }
     
     function toggleDetalhesDom(i) {
@@ -2774,6 +2819,7 @@ ${textoAtual.slice(-6000)}`;
             </td></tr>`;
         });
         tbody.innerHTML = htmlBuffer;
+        aplicarHighlight('listaLeis', [termoNome, termoDesc]);
     }
 
     function toggleDetalhesLeis(i) {
@@ -2987,6 +3033,7 @@ ${textoAtual.slice(-6000)}`;
             
             tbody.innerHTML += row;
         });
+        aplicarHighlight('listaNacoes', [termoNome, termoDesc]);
     }
 
     function toggleDetalhesNacao(i) {
