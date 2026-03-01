@@ -1,7 +1,7 @@
 <html lang="pt-br"><head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Códice - A Fenda (v12.1)</title>
+<title>Códice - A Fenda (v15.1)</title>
 <!-- BIBLIOTECA ADICIONADA PARA DOCX -->
 <script src="https://unpkg.com/html-docx-js/dist/html-docx.js"></script>
 <style>
@@ -270,7 +270,7 @@
 <div id="aba-regras" class="content active">
     <div class="panel">
         <div class="header-row">
-            <h2>Painel de Controle &amp; Protocolo (v12.1)</h2>
+            <h2>Painel de Controle &amp; Protocolo (v15.2)</h2>
             <div>
                 <button class="btn btn-success" onclick="salvarDadosLocal()">💾 Salvar (Navegador)</button>
                 <button class="btn btn-warning" onclick="baixarBackupCompleto()">📦 Baixar TUDO (Backup JSON)</button>
@@ -436,6 +436,11 @@
             </div>
         </div>
 
+        <div style="display:flex; gap:10px; margin-bottom: 15px; background: var(--bg-panel); padding: 10px; border-radius: 4px; border: 1px solid var(--border-color);">
+            <input type="text" id="buscaNomePersonagens" placeholder="🔍 Buscar por Nome..." onkeyup="renderizarPersonagens()" style="flex:1; margin:0;">
+            <input type="text" id="buscaDescPersonagens" placeholder="🔍 Buscar na Descrição/Dados (Inventário, Psique, Lore...)" onkeyup="renderizarPersonagens()" style="flex:1; margin:0;">
+        </div>
+
         <div class="table-wrapper">
             <table id="tabelaPersonagens">
                 <thead>
@@ -473,6 +478,12 @@
                 <button class="btn btn-primary" onclick="novaOrganizacao()">+ Nova Org</button>
             </div>
         </div>
+
+        <div style="display:flex; gap:10px; margin-bottom: 15px; background: var(--bg-panel); padding: 10px; border-radius: 4px; border: 1px solid var(--border-color);">
+            <input type="text" id="buscaNomeOrgs" placeholder="🔍 Buscar por Nome..." onkeyup="renderizarOrganizacoes()" style="flex:1; margin:0;">
+            <input type="text" id="buscaDescOrgs" placeholder="🔍 Buscar na Descrição/Dados (Membros, Eventos...)" onkeyup="renderizarOrganizacoes()" style="flex:1; margin:0;">
+        </div>
+
         <div class="table-wrapper">
             <table id="tabelaOrgs">
                 <thead>
@@ -532,6 +543,12 @@
                 <button class="btn btn-primary" onclick="novaLei()">+ Lei</button>
             </div>
         </div>
+
+        <div style="display:flex; gap:10px; margin-bottom: 15px; background: var(--bg-panel); padding: 10px; border-radius: 4px; border: 1px solid var(--border-color);">
+            <input type="text" id="buscaNomeLeis" placeholder="🔍 Buscar por Nome da Lei..." onkeyup="renderizarLeis()" style="flex:1; margin:0;">
+            <input type="text" id="buscaDescLeis" placeholder="🔍 Buscar na Descrição/Dados..." onkeyup="renderizarLeis()" style="flex:1; margin:0;">
+        </div>
+
         <div class="table-wrapper">
             <!-- AQUI FOI APLICADA A CORREÇÃO DA TABELA DE LEIS -->
             <table id="tabelaLeis" style="table-layout: fixed; word-wrap: break-word;">
@@ -561,6 +578,12 @@
                 <button class="btn btn-primary" onclick="novaRegraFisica()">+ Regra</button>
             </div>
         </div>
+
+        <div style="display:flex; gap:10px; margin-bottom: 15px; background: var(--bg-panel); padding: 10px; border-radius: 4px; border: 1px solid var(--border-color);">
+            <input type="text" id="buscaNomeFisica" placeholder="🔍 Buscar por Nome da Regra..." onkeyup="renderizarFisica()" style="flex:1; margin:0;">
+            <input type="text" id="buscaDescFisica" placeholder="🔍 Buscar na Descrição/Dados..." onkeyup="renderizarFisica()" style="flex:1; margin:0;">
+        </div>
+
         <div class="table-wrapper">
             <!-- AQUI FOI APLICADA A CORREÇÃO DA TABELA DE FÍSICA -->
             <table id="tabelaFisica" style="table-layout: fixed; word-wrap: break-word;">
@@ -591,6 +614,12 @@
                 <button class="btn btn-primary" onclick="novoDom()">+ Dom</button>
             </div>
         </div>
+
+        <div style="display:flex; gap:10px; margin-bottom: 15px; background: var(--bg-panel); padding: 10px; border-radius: 4px; border: 1px solid var(--border-color);">
+            <input type="text" id="buscaNomeDons" placeholder="🔍 Buscar por Nome do Dom..." onkeyup="renderizarDons()" style="flex:1; margin:0;">
+            <input type="text" id="buscaDescDons" placeholder="🔍 Buscar na Descrição/Dados..." onkeyup="renderizarDons()" style="flex:1; margin:0;">
+        </div>
+
         <div class="table-wrapper">
             <table id="tabelaDons" style="table-layout: fixed; word-wrap: break-word;">
                 <thead>
@@ -621,6 +650,11 @@
                 <button class="btn btn-primary" onclick="novoPais()">+ País</button>
                 <button class="btn btn-secondary" onclick="resetarPadroes()">Restaurar Padrões</button>
             </div>
+        </div>
+
+        <div style="display:flex; gap:10px; margin-bottom: 15px; background: var(--bg-panel); padding: 10px; border-radius: 4px; border: 1px solid var(--border-color);">
+            <input type="text" id="buscaNomeNacoes" placeholder="🔍 Buscar por País..." onkeyup="renderizarNacoes()" style="flex:1; margin:0;">
+            <input type="text" id="buscaDescNacoes" placeholder="🔍 Buscar na Política/Dados (Líderes, Vassalos...)" onkeyup="renderizarNacoes()" style="flex:1; margin:0;">
         </div>
         
         <div style="background: var(--bg-panel); padding: 15px; border-bottom: 2px solid var(--border-color); margin-bottom: 20px;">
@@ -2024,7 +2058,7 @@ ${textoAtual.slice(-6000)}`;
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = `Codice_A_Fenda_v12.1_${getFormattedDate()}.html`;
+        a.download = `Codice_A_Fenda_v15.1_${getFormattedDate()}.html`;
         document.body.appendChild(a); a.click(); document.body.removeChild(a);
         setTimeout(() => URL.revokeObjectURL(url), 1500);
     }
@@ -2290,7 +2324,13 @@ ${textoAtual.slice(-6000)}`;
         
         let htmlBuffer = ""; // Otimização de velocidade
 
+        const termoNome = (document.getElementById('buscaNomePersonagens')?.value || "").toLowerCase();
+        const termoDesc = (document.getElementById('buscaDescPersonagens')?.value || "").toLowerCase();
+
         bancoDados.personagens.forEach((p, index) => {
+            if (termoNome && !(p.nome || "").toLowerCase().includes(termoNome)) return;
+            if (termoDesc && !JSON.stringify(p).toLowerCase().includes(termoDesc)) return;
+
             // Garantia de Arrays
             if(!Array.isArray(p.personalidade)) p.personalidade = [];
             if(!Array.isArray(p.inventario)) p.inventario = [];
@@ -2452,8 +2492,14 @@ ${textoAtual.slice(-6000)}`;
         const tbody = document.getElementById('listaOrganizacoes');
         let htmlBuffer = "";
         
+        const termoNome = (document.getElementById('buscaNomeOrgs')?.value || "").toLowerCase();
+        const termoDesc = (document.getElementById('buscaDescOrgs')?.value || "").toLowerCase();
+
         if(!bancoDados.organizacoes) bancoDados.organizacoes = [];
         bancoDados.organizacoes.forEach((org, index) => {
+            if (termoNome && !(org.nome || "").toLowerCase().includes(termoNome)) return;
+            if (termoDesc && !JSON.stringify(org).toLowerCase().includes(termoDesc)) return;
+
             if(!Array.isArray(org.membros)) org.membros = [];
             if(!Array.isArray(org.historico)) org.historico = [];
             if(!Array.isArray(org.regrasInternas)) org.regrasInternas = []; 
@@ -2543,7 +2589,14 @@ ${textoAtual.slice(-6000)}`;
     function renderizarFisica() {
         const tbody = document.getElementById('listaFisica');
         let htmlBuffer = "";
+        
+        const termoNome = (document.getElementById('buscaNomeFisica')?.value || "").toLowerCase();
+        const termoDesc = (document.getElementById('buscaDescFisica')?.value || "").toLowerCase();
+
         bancoDados.fisica.forEach((item, i) => {
+            if (termoNome && !(item.regra || "").toLowerCase().includes(termoNome)) return;
+            if (termoDesc && !JSON.stringify(item).toLowerCase().includes(termoDesc)) return;
+
             const citacoesArr = (item.citacoes || "").split(',').filter(s => s.trim() !== "");
             const citacoesCount = citacoesArr.length;
             let citacoesHTML = citacoesArr.map(c => `<span class="citation-chip">${c.trim()}</span>`).join(' ');
@@ -2609,7 +2662,13 @@ ${textoAtual.slice(-6000)}`;
         if(!tbody) return;
         let htmlBuffer = "";
         
+        const termoNome = (document.getElementById('buscaNomeDons')?.value || "").toLowerCase();
+        const termoDesc = (document.getElementById('buscaDescDons')?.value || "").toLowerCase();
+
         bancoDados.dons.forEach((item, i) => {
+            if (termoNome && !(item.nome || "").toLowerCase().includes(termoNome)) return;
+            if (termoDesc && !JSON.stringify(item).toLowerCase().includes(termoDesc)) return;
+
             const citacoesArr = (item.citacoes || "").split(',').filter(s => s.trim() !== "");
             const citacoesCount = citacoesArr.length;
             let citacoesHTML = citacoesArr.map(c => `<span class="citation-chip">${c.trim()}</span>`).join(' ');
@@ -2681,7 +2740,14 @@ ${textoAtual.slice(-6000)}`;
     function renderizarLeis() {
         const tbody = document.getElementById('listaLeis');
         let htmlBuffer = "";
+        
+        const termoNome = (document.getElementById('buscaNomeLeis')?.value || "").toLowerCase();
+        const termoDesc = (document.getElementById('buscaDescLeis')?.value || "").toLowerCase();
+
         bancoDados.leis.forEach((item, i) => {
+            if (termoNome && !(item.nome || "").toLowerCase().includes(termoNome)) return;
+            if (termoDesc && !JSON.stringify(item).toLowerCase().includes(termoDesc)) return;
+
             const citacoesArr = (item.citacoes || "").split(',').filter(s => s.trim() !== "");
             const citacoesCount = citacoesArr.length;
             let citacoesHTML = citacoesArr.map(c => `<span class="citation-chip">${c.trim()}</span>`).join(' ');
@@ -2809,14 +2875,25 @@ ${textoAtual.slice(-6000)}`;
         const raridades = bancoDados.configDemografica.raridades;
         const ranks = ["SS", "S", "A", "B", "C", "D", "E"];
         
+        const termoNome = (document.getElementById('buscaNomeNacoes')?.value || "").toLowerCase();
+        const termoDesc = (document.getElementById('buscaDescNacoes')?.value || "").toLowerCase();
+
         // A ordenação manual via ordenarTabelaNacoes assume o controle agora
 
         bancoDados.paises.forEach((paisObj, index) => {
+            const pais = paisObj.nome;
+            const info = bancoDados.nacoesInfo[pais] || { politica: "" };
+
+            if (termoNome && !(pais || "").toLowerCase().includes(termoNome)) return;
+            if (termoDesc) {
+                const searchCorpus = JSON.stringify(paisObj).toLowerCase() + JSON.stringify(info).toLowerCase();
+                if (!searchCorpus.includes(termoDesc)) return;
+            }
+
             if(!Array.isArray(paisObj.lideres)) paisObj.lideres = [];
             if(!Array.isArray(paisObj.vassalos)) paisObj.vassalos = [];
             if(!Array.isArray(paisObj.hierarquia)) paisObj.hierarquia = [];
 
-            const pais = paisObj.nome;
             const pct = paisObj.pct;
             const popPais = Math.floor(popTotal * pct);
             const sssChars = bancoDados.personagens.filter(p => p.pais === pais && p.rank && p.rank.trim().toUpperCase() === 'SSS');
@@ -2852,7 +2929,6 @@ ${textoAtual.slice(-6000)}`;
                 row += `<td class="number-cell">${displayCount.toLocaleString('pt-BR')}</td>`;
             });
             let poderFmt = poderTotal > 1e9 ? (poderTotal/1e9).toFixed(1) + " B" : poderTotal.toLocaleString('pt-BR');
-            const info = bancoDados.nacoesInfo[pais] || { politica: "" };
             row += `<td class="number-cell" style="color:var(--success)">${poderFmt}</td>
                     <td contenteditable="true" class="editable" onblur="salvarInfoNacao('${pais}', 'politica', this.innerText)">${info.politica}</td>
                     <td class="no-print"><button class="btn btn-danger btn-sm" onclick="delItem('paises', ${index})">X</button></td>
