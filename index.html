@@ -1,9 +1,12 @@
 <html lang="pt-br"><head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Códice - A Fenda (v15.3)</title>
+<title>Códice - A Fenda (v17.3)</title>
 <!-- BIBLIOTECA ADICIONADA PARA DOCX -->
 <script src="https://unpkg.com/html-docx-js/dist/html-docx.js"></script>
+<!-- BIBLIOTECAS ADICIONADAS PARA O MAPA LEAFLET -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
     :root {
         --primary: #2c3e50;
@@ -275,6 +278,7 @@
         <div class="tab" id="tab-leis" onclick="switchTab('aba-leis', this)">8. Leis</div>
         <div class="tab" id="tab-orgs" onclick="switchTab('aba-orgs', this)">9. Organizações</div>
         <div class="tab" id="tab-nacoes" onclick="switchTab('aba-nacoes', this)">10. Geopolítica</div>
+        <div class="tab" id="tab-mapa" onclick="switchTab('aba-mapa', this)">11. Mapa & Territórios</div>
     </div>
     <button class="add-tab-btn" onclick="abrirCriadorAba()">+ Aba</button>
     <!-- BOTÃO MODO ESCURO -->
@@ -284,7 +288,7 @@
 <div id="aba-regras" class="content active">
     <div class="panel">
         <div class="header-row">
-            <h2>Painel de Controle &amp; Protocolo (v15.3)</h2>
+            <h2>Painel de Controle &amp; Protocolo (v17.3)</h2>
             <div>
                 <button class="btn btn-success" onclick="salvarDadosLocal()">💾 Salvar (Navegador)</button>
                 <button class="btn btn-warning" onclick="baixarBackupCompleto()">📦 Baixar TUDO (Backup JSON)</button>
@@ -708,6 +712,57 @@
     </div>
 </div>
 
+<!-- NOVA ABA 11: MAPA & TERRITÓRIOS (ETAPA 1 - GESTÃO GLOBAL) -->
+<div id="aba-mapa" class="content">
+    <div class="panel">
+        <div class="header-row">
+            <h2>Mapa Interativo & Divisão Global</h2>
+            <div>
+                <button class="btn btn-info" onclick="baixarJSONAba('paises')">📥 Baixar JSON</button>
+                <button class="btn btn-warning" onclick="abrirGerenciadorDadosAba('paises')">⚙️ Dados (JSON)</button>
+                <button class="btn btn-secondary" onclick="baixarTabela('tabelaTerritorios', 'Territorios')">📊 Baixar Tabela</button>
+            </div>
+        </div>
+
+        <!-- ESPAÇO DO MAPA (ETAPA 2: LEAFLET + GEOJSON) -->
+        <div id="mapa-interativo" style="height: 600px; width: 100%; border: 2px solid #ccc; border-radius: 8px; z-index: 1; margin-bottom: 20px;"></div>
+
+        <!-- GESTÃO DE TERRITÓRIOS -->
+        <div style="background: var(--bg-body); padding: 15px; border-radius: 4px; border: 1px solid var(--border-color); margin-bottom: 20px;">
+            <h3 style="margin-top: 0; color: var(--accent);">Anexação de Territórios (Estados/Províncias)</h3>
+            <div style="display: flex; gap: 15px; align-items: flex-end;">
+                <div style="flex: 1;">
+                    <label style="font-weight: bold; font-size: 0.9em;">País Soberano (Vindos da Aba 10):</label>
+                    <select id="select-pais-soberano" style="margin: 0;"></select>
+                </div>
+                <div style="flex: 2;">
+                    <label style="font-weight: bold; font-size: 0.9em;">Nome do Estado/Território a Anexar:</label>
+                    <input type="text" id="input-novo-territorio" placeholder="Ex: São Paulo, Texas, Sibéria..." style="margin: 0;">
+                </div>
+                <button class="btn btn-success" onclick="anexarTerritorio()" style="height: 38px;">+ Anexar Território</button>
+            </div>
+        </div>
+
+        <div style="display:flex; gap:10px; margin-bottom: 15px; background: var(--bg-panel); padding: 10px; border-radius: 4px; border: 1px solid var(--border-color);">
+            <input type="text" id="buscaTerritorio" placeholder="🔍 Buscar País ou Território..." onkeyup="renderizarTerritorios()" style="flex:1; margin:0;">
+        </div>
+
+        <div class="table-wrapper">
+            <table id="tabelaTerritorios" style="table-layout: fixed; word-wrap: break-word;">
+                <thead>
+                    <tr>
+                        <th style="width: 20%;">País Soberano</th>
+                        <th style="width: 40%;">Território/Estado</th>
+                        <th style="width: 30%;">Notas/Controle de NP</th>
+                        <th class="no-print" style="width: 10%;">Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="listaTerritorios"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
 <!-- MODAL GERENCIADOR DE DADOS DA ABA -->
 <div id="aba-json-modal">
     <div class="aba-json-box">
@@ -890,6 +945,12 @@
         let data = key === 'config' ? bancoDados.configDemografica : bancoDados[key];
         if (!data) data = []; 
         document.getElementById('aba-json-area').value = JSON.stringify(data, null, 2);
+        
+        const btnCores = document.getElementById('btn-cores-json');
+        if (btnCores) {
+            btnCores.style.display = (key === 'paises') ? 'inline-block' : 'none';
+        }
+        
         document.getElementById('aba-json-modal').style.display = 'flex';
     }
 
@@ -1727,6 +1788,8 @@ ${textoAtual.slice(-6000)}`;
         atualizarIdades();
         renderizarListaCapitulos();
         renderizarListaProjetos(); // Renderizar Projetos
+        renderizarDropdownPaisesMapa(); // Injeção Aba 11
+        renderizarTerritorios(); // Injeção Aba 11
     }
 
     // --- LÓGICA GERENCIADOR DE RANKS ---
@@ -2120,7 +2183,7 @@ ${textoAtual.slice(-6000)}`;
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = `Codice_A_Fenda_v15.3_${getFormattedDate()}.html`;
+        a.download = `Codice_A_Fenda_v17.3_${getFormattedDate()}.html`;
         document.body.appendChild(a); a.click(); document.body.removeChild(a);
         setTimeout(() => URL.revokeObjectURL(url), 1500);
     }
@@ -3456,6 +3519,17 @@ ${textoAtual.slice(-6000)}`;
         document.querySelectorAll('.content').forEach(c=>c.classList.remove('active'));
         document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
         const el = document.getElementById(id); if(el) el.classList.add('active'); if(btn) btn.classList.add('active');
+        
+        // CORREÇÃO: Força o mapa a se redesenhar quando a Aba 11 for aberta (Bug da aba oculta)
+        if (id === 'aba-mapa') {
+            if (!window.mapaIniciado) {
+                setTimeout(initMapa, 100);
+            } else if (window.meuMapaLeaflet) {
+                setTimeout(function(){ 
+                    window.meuMapaLeaflet.invalidateSize(); 
+                }, 300);
+            }
+        }
     }
     function resetarPadroes() { if(confirm("Resetar configurações demográficas?")) { 
         bancoDados.configDemografica.raridades = { "SS":{taxa:50000000,np:55000000}, "S":{taxa:5000000,np:5500000}, "A":{taxa:500000,np:550000}, "B":{taxa:50000,np:55000}, "C":{taxa:5000,np:5500}, "D":{taxa:500,np:550}, "E":{taxa:50,np:55} };
@@ -3743,7 +3817,523 @@ ${textoAtual.slice(-6000)}`;
             textArea.placeholder = "Selecione um capítulo à esquerda ou crie um novo...";
         }
     }
+
+    // ==========================================
+    // LÓGICA DA ABA 11 - MAPA & TERRITÓRIOS
+    // ==========================================
+
+    function renderizarDropdownPaisesMapa() {
+        const select = document.getElementById('select-pais-soberano');
+        if (!select) return;
+        
+        // Mantém o valor selecionado se possível ao re-renderizar
+        const valorAtual = select.value;
+        select.innerHTML = '';
+        
+        if (!bancoDados.paises || bancoDados.paises.length === 0) {
+            select.innerHTML = '<option value="">Nenhum país cadastrado na Aba 10</option>';
+            return;
+        }
+
+        // Ordena alfabeticamente para facilitar a busca
+        const paisesOrdenados = [...bancoDados.paises].sort((a, b) => a.nome.localeCompare(b.nome));
+
+        paisesOrdenados.forEach((pais) => {
+            const option = document.createElement('option');
+            // CORREÇÃO: Usamos o NOME do país como value. Isso previne falhas se a Aba 10 for reordenada.
+            option.value = pais.nome;
+            option.text = pais.nome;
+            select.appendChild(option);
+        });
+
+        if (valorAtual && Array.from(select.options).some(opt => opt.value === valorAtual)) {
+            select.value = valorAtual;
+        }
+    }
+
+    function anexarTerritorio() {
+        const select = document.getElementById('select-pais-soberano');
+        const inputTerritorio = document.getElementById('input-novo-territorio');
+        const nomePaisSoberano = select.value;
+        const nomeTerritorio = inputTerritorio.value.trim();
+        
+        // Pega a data do mundo (Aba 1) para o log histórico
+        const dataMundoInput = document.getElementById('dataAtual').value;
+        const dataLog = dataMundoInput ? dataMundoInput : new Date().toLocaleDateString('pt-BR');
+
+        if (!nomePaisSoberano) {
+            alert("Selecione um país soberano válido.");
+            return;
+        }
+
+        // CORREÇÃO: Busca o índice em tempo real baseando-se no nome, blindando contra ordenações
+        const paisIndex = bancoDados.paises.findIndex(p => p.nome === nomePaisSoberano);
+
+        if (paisIndex === -1 || !bancoDados.paises[paisIndex]) {
+            alert("Erro: País soberano não encontrado no banco de dados.");
+            return;
+        }
+
+        if (!nomeTerritorio) {
+            alert("Digite o nome do estado/território.");
+            return;
+        }
+
+        // Garante que o array de territórios existe naquele país
+        if (!Array.isArray(bancoDados.paises[paisIndex].territorios)) {
+            bancoDados.paises[paisIndex].territorios = [];
+        }
+
+        bancoDados.paises[paisIndex].territorios.push({
+            nome: nomeTerritorio,
+            notas: ""
+        });
+
+        // --- REGISTO HISTÓRICO NO PAÍS SOBERANO (ABA 10) ---
+        if (!bancoDados.nacoesInfo[nomePaisSoberano]) bancoDados.nacoesInfo[nomePaisSoberano] = { politica: "" };
+        let notaAtualSoberano = bancoDados.nacoesInfo[nomePaisSoberano].politica || "";
+        let logSoberano = `Anexou ${nomeTerritorio} em ${dataLog}`;
+        bancoDados.nacoesInfo[nomePaisSoberano].politica = notaAtualSoberano ? `${notaAtualSoberano}; ${logSoberano}` : logSoberano;
+
+        // TRANSFERÊNCIA DEMOGRÁFICA E LOG (Aba 10)
+        // Busca se o nome do território digitado é um país existente
+        const indexPaisAnexado = bancoDados.paises.findIndex(p => p.nome.toLowerCase() === nomeTerritorio.toLowerCase());
+        
+        // Se encontrou o país e ele não está anexando a si mesmo
+        if (indexPaisAnexado !== -1 && indexPaisAnexado !== paisIndex) {
+            // Força a transformação para Float (Número) para não juntar as strings acidentalmente
+            let pctSoberano = parseFloat(bancoDados.paises[paisIndex].pct) || 0;
+            let pctAnexado = parseFloat(bancoDados.paises[indexPaisAnexado].pct) || 0;
+
+            bancoDados.paises[paisIndex].pct = pctSoberano + pctAnexado;
+            bancoDados.paises[indexPaisAnexado].pct = 0;
+            
+            // --- REGISTO HISTÓRICO NO PAÍS ANEXADO (ABA 10) ---
+            const nomePaisDerrotado = bancoDados.paises[indexPaisAnexado].nome;
+            if (!bancoDados.nacoesInfo[nomePaisDerrotado]) bancoDados.nacoesInfo[nomePaisDerrotado] = { politica: "" };
+            let notaAtualAnexado = bancoDados.nacoesInfo[nomePaisDerrotado].politica || "";
+            let logAnexado = `Anexado por ${nomePaisSoberano} em ${dataLog}`;
+            bancoDados.nacoesInfo[nomePaisDerrotado].politica = notaAtualAnexado ? `${notaAtualAnexado}; ${logAnexado}` : logAnexado;
+
+        }
+
+        renderizarNacoes(); // Atualiza a aba geopolítica visualmente com os novos logs e demografia
+        inputTerritorio.value = '';
+        renderizarTerritorios();
+        salvarDadosLocal();
+    }
+
+    function renderizarTerritorios() {
+        const tbody = document.getElementById('listaTerritorios');
+        if (!tbody) return;
+        
+        const termoBusca = (document.getElementById('buscaTerritorio')?.value || "").toLowerCase();
+        let htmlBuffer = "";
+
+        if (!bancoDados.paises) return;
+
+        bancoDados.paises.forEach((pais) => {
+            if (!Array.isArray(pais.territorios)) return;
+
+            pais.territorios.forEach((terr, terrIndex) => {
+                if (termoBusca && !(pais.nome.toLowerCase().includes(termoBusca) || terr.nome.toLowerCase().includes(termoBusca) || (terr.notas && terr.notas.toLowerCase().includes(termoBusca)))) {
+                    return; // Pula se não bater com a busca
+                }
+
+                // Codificação segura do nome para evitar quebra no HTML (caso tenha aspas)
+                const safeNome = encodeURIComponent(pais.nome).replace(/'/g, "%27");
+
+                htmlBuffer += `
+                <tr>
+                    <td><b>${pais.nome}</b></td>
+                    <td contenteditable="true" class="editable" onblur="updTerritorio('${safeNome}', ${terrIndex}, 'nome', this.innerText)">${terr.nome}</td>
+                    <td contenteditable="true" class="editable" onblur="updTerritorio('${safeNome}', ${terrIndex}, 'notas', this.innerText)">${terr.notas || ''}</td>
+                    <td class="no-print">
+                        <button class="btn btn-danger btn-sm" onclick="delTerritorio('${safeNome}', ${terrIndex})">X</button>
+                    </td>
+                </tr>`;
+            });
+        });
+
+        tbody.innerHTML = htmlBuffer;
+        aplicarHighlight('listaTerritorios', [termoBusca]);
+    }
+
+    function updTerritorio(safeNome, terrIndex, field, val) {
+        const nomePais = decodeURIComponent(safeNome);
+        const paisIndex = bancoDados.paises.findIndex(p => p.nome === nomePais);
+        if(paisIndex !== -1) {
+            bancoDados.paises[paisIndex].territorios[terrIndex][field] = val;
+            salvarDadosLocal();
+        }
+    }
+
+    function delTerritorio(safeNome, terrIndex) {
+        const nomePais = decodeURIComponent(safeNome);
+        const paisIndex = bancoDados.paises.findIndex(p => p.nome === nomePais);
+        if(paisIndex === -1) return;
+
+        const nome = bancoDados.paises[paisIndex].territorios[terrIndex].nome;
+        if (confirm(`Desanexar o território "${nome}" de ${bancoDados.paises[paisIndex].nome}?`)) {
+            bancoDados.paises[paisIndex].territorios.splice(terrIndex, 1);
+            renderizarTerritorios();
+            salvarDadosLocal();
+        }
+    }
+
+    // ==========================================
+    // INICIALIZAÇÃO DO MAPA LEAFLET (ETAPA 2)
+    // ==========================================
     
+    window.mapaIniciado = false;
+    window.meuMapaLeaflet = null;
+
+    // Dicionário Expandido: Mapeamento GeoJSON (Inglês) -> Aba 10 (Português)
+    const dicNomesMapa = {
+        // Potências Globais Base
+        "Brazil": "Brasil", "Russia": "Rússia", "India": "Índia", "China": "China", 
+        "Japan": "Japão", "Germany": "Alemanha", "United Kingdom": "Reino Unido", 
+        "France": "França", "Italy": "Itália", "South Africa": "África do Sul", 
+        "Spain": "Espanha", "Egypt": "Egito", "Turkey": "Turquia", "Iran": "Irã", 
+        "Poland": "Polônia", "South Korea": "Coreia do Sul", "North Korea": "Coreia do Norte", 
+        "Saudi Arabia": "Arábia Saudita", "Ukraine": "Ucrânia", "Australia": "Austrália", 
+        "Indonesia": "Indonésia",
+
+        // América do Norte
+        "United States of America": "Estados Unidos", "Canada": "Canadá", "Mexico": "México", "Greenland": "Groenlândia",
+        
+        // América Central e Caribe
+        "Belize": "Belize", "Costa Rica": "Costa Rica", "El Salvador": "El Salvador", 
+        "Guatemala": "Guatemala", "Honduras": "Honduras", "Nicaragua": "Nicarágua", "Panama": "Panamá", 
+        "Antigua and Barbuda": "Antígua e Barbuda", "The Bahamas": "Bahamas", "Barbados": "Barbados", 
+        "Cuba": "Cuba", "Dominica": "Dominica", "Grenada": "Granada", "Haiti": "Haiti", 
+        "Jamaica": "Jamaica", "Dominican Republic": "República Dominicana", "Saint Lucia": "Santa Lúcia", 
+        "Saint Kitts and Nevis": "São Cristóvão e Névis", "Saint Vincent and the Grenadines": "São Vicente e Granadinas", 
+        "Trinidad and Tobago": "Trinidad e Tobago", "Puerto Rico": "Porto Rico", "Aruba": "Aruba", "Curaçao": "Curaçao",
+        
+        // América do Sul
+        "Argentina": "Argentina", "Bolivia": "Bolívia", "Chile": "Chile", "Colombia": "Colômbia", 
+        "Ecuador": "Equador", "Guyana": "Guiana", "Paraguay": "Paraguai", "Peru": "Peru", 
+        "Suriname": "Suriname", "Uruguay": "Uruguai", "Venezuela": "Venezuela", "French Guiana": "Guiana Francesa",
+
+        // Expansão Global Completa para todos os Países do Banco de Dados
+        "Afghanistan": "Afeganistão", "Albania": "Albânia", "Algeria": "Argélia", "Andorra": "Andorra", "Angola": "Angola", "Armenia": "Armênia", "Austria": "Áustria", "Azerbaijan": "Azerbaijão", "Bahrain": "Bahrein", "Bangladesh": "Bangladesh", "Belarus": "Bielorrússia", "Belgium": "Bélgica", "Benin": "Benim", "Bhutan": "Butão", "Bosnia and Herzegovina": "Bósnia e Herzegovina", "Botswana": "Botsuana", "Brunei": "Brunei", "Bulgaria": "Bulgária", "Burkina Faso": "Burkina Faso", "Burundi": "Burundi", "Cambodia": "Camboja", "Cameroon": "Camarões", "Cape Verde": "Cabo Verde", "Central African Republic": "República Centro-Africana", "Chad": "Chade", "Comoros": "Comores", "Republic of the Congo": "República do Congo", "Democratic Republic of the Congo": "República Democrática do Congo", "Croatia": "Croácia", "Cyprus": "Chipre", "Czech Republic": "República Tcheca", "Denmark": "Dinamarca", "Djibouti": "Djibouti", "East Timor": "Timor-Leste", "Equatorial Guinea": "Guiné Equatorial", "Eritrea": "Eritreia", "Estonia": "Estônia", "Eswatini": "Eswatini", "Ethiopia": "Etiópia", "Fiji": "Fiji", "Finland": "Finlândia", "Gabon": "Gabão", "The Gambia": "Gâmbia", "Georgia": "Geórgia", "Ghana": "Gana", "Greece": "Grécia", "Guinea": "Guiné", "Guinea-Bissau": "Guiné-Bissau", "Hungary": "Hungria", "Iceland": "Islândia", "Iraq": "Iraque", "Ireland": "Irlanda", "Israel": "Israel", "Ivory Coast": "Costa do Marfim", "Jordan": "Jordânia", "Kazakhstan": "Cazaquistão", "Kenya": "Quênia", "Kiribati": "Kiribati", "Kuwait": "Kuwait", "Kyrgyzstan": "Quirguistão", "Laos": "Laos", "Latvia": "Letônia", "Lebanon": "Líbano", "Lesotho": "Lesoto", "Liberia": "Libéria", "Libya": "Líbia", "Liechtenstein": "Liechtenstein", "Lithuania": "Lituânia", "Luxembourg": "Luxemburgo", "Madagascar": "Madagascar", "Malawi": "Malawi", "Malaysia": "Malásia", "Maldives": "Maldivas", "Mali": "Mali", "Malta": "Malta", "Marshall Islands": "Ilhas Marshall", "Mauritania": "Mauritânia", "Mauritius": "Maurício", "Micronesia": "Micronésia", "Moldova": "Moldávia", "Monaco": "Mônaco", "Mongolia": "Mongólia", "Montenegro": "Montenegro", "Morocco": "Marrocos", "Mozambique": "Moçambique", "Myanmar": "Myanmar", "Namibia": "Namíbia", "Nauru": "Nauru", "Nepal": "Nepal", "Netherlands": "Países Baixos", "New Zealand": "Nova Zelândia", "Niger": "Níger", "Nigeria": "Nigéria", "North Macedonia": "Macedônia do Norte", "Norway": "Noruega", "Oman": "Omã", "Pakistan": "Paquistão", "Palau": "Palau", "Palestine": "Estado da Palestina", "Papua New Guinea": "Papua-Nova Guiné", "Philippines": "Filipinas", "Portugal": "Portugal", "Qatar": "Catar", "Romania": "Romênia", "Rwanda": "Ruanda", "San Marino": "San Marino", "Sao Tome and Principe": "São Tomé e Príncipe", "Senegal": "Senegal", "Serbia": "Sérvia", "Seychelles": "Seicheles", "Sierra Leone": "Serra Leoa", "Singapore": "Singapura", "Slovakia": "Eslováquia", "Slovenia": "Eslovênia", "Solomon Islands": "Ilhas Salomão", "Somalia": "Somália", "South Sudan": "Sudão do Sul", "Sri Lanka": "Sri Lanka", "Sudan": "Sudão", "Sweden": "Suécia", "Switzerland": "Suíça", "Syria": "Síria", "Taiwan": "Taiwan", "Tajikistan": "Tajiquistão", "Tanzania": "Tanzânia", "Thailand": "Tailândia", "Togo": "Togo", "Tonga": "Tonga", "Tunisia": "Tunísia", "Turkmenistan": "Turcomenistão", "Tuvalu": "Tuvalu", "Uganda": "Uganda", "United Arab Emirates": "Emirados Árabes Unidos", "Uzbekistan": "Uzbequistão", "Vanuatu": "Vanuatu", "Vatican City": "Vaticano", "Vietnam": "Vietnã", "Yemen": "Iêmen", "Zambia": "Zâmbia", "Zimbabwe": "Zimbábue", "Hong Kong": "Hong Kong"
+    };
+
+    // Descobre quem é o Soberano atual de um território
+    function getSoberano(nomeGeo, isState) {
+        if (!bancoDados.paises) return null;
+        const nomeReal = dicNomesMapa[nomeGeo] || nomeGeo;
+        
+        // 1. Verifica se já está anexado na Aba 11 como território de alguma superpotência
+        for (let p of bancoDados.paises) {
+            if (p.territorios && p.territorios.some(t => t.nome.toLowerCase() === nomeReal.toLowerCase())) {
+                return p; 
+            }
+        }
+        
+        // 2. Se for estado do Brasil e não foi anexado por ninguém, pertence ao Brasil por padrão
+        if (isState) {
+            let brasil = bancoDados.paises.find(p => p.nome.toLowerCase().includes("brasil"));
+            if (brasil) return brasil;
+            return null;
+        }
+
+        // 3. Se for um país e não foi anexado, verifica se ele existe na Aba 10
+        let pais = bancoDados.paises.find(p => p.nome.toLowerCase() === nomeReal.toLowerCase() || p.nome.toLowerCase().includes(nomeReal.toLowerCase()) || nomeReal.toLowerCase().includes(p.nome.toLowerCase()));
+        return pais || null;
+    }
+
+    // Função para gerar cor baseada no País Soberano (Dominador)
+    function getColorParaPais(nomeGeo, isState = false) {
+        const soberano = getSoberano(nomeGeo, isState);
+        if (!soberano) return '#cccccc'; // Fica cinza se não pertencer a ninguém
+        
+        // Se o país tem uma cor personalizada definida pelo usuário, usa ela (Aba 10/11)
+        if (soberano.cor) {
+            return soberano.cor;
+        }
+        
+        const index = bancoDados.paises.indexOf(soberano);
+        const baseHue = (index * 137.508) % 360; 
+        
+        if (isState) {
+            // Cria variações de saturação e luz para os estados se destacarem uns dos outros
+            const offset = (nomeGeo.charCodeAt(0) + (nomeGeo.charCodeAt(nomeGeo.length - 1) || 0)) % 30 - 15;
+            const lum = 40 + (nomeGeo.length % 20); // Varia luminosidade entre 40% e 60%
+            return `hsl(${baseHue + offset}, 75%, ${lum}%)`; 
+        }
+
+        return `hsl(${baseHue}, 70%, 50%)`; // Países inteiros herdam a cor sólida padrão
+    }
+
+    function initMapa() {
+        if (typeof L === 'undefined') {
+            console.warn("[SISTEMA] Aguardando biblioteca do Mapa...");
+            setTimeout(initMapa, 500);
+            return;
+        }
+
+        if (window.mapaIniciado) return;
+
+        window.meuMapaLeaflet = L.map('mapa-interativo').setView([20, 0], 2);
+
+        // MAPA BASE "BOARD GAME": Sem cidades, sem ruas, sem nomes. 
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', {
+            maxZoom: 18,
+            attribution: '© OpenStreetMap & CartoDB'
+        }).addTo(window.meuMapaLeaflet);
+
+        // Baixa o Mapa Mundial e os Estados do Brasil simultaneamente
+        const pMundo = fetch('https://raw.githubusercontent.com/datasets/geo-countries/master/data/countries.geojson').then(r => r.json());
+        const pBrasil = fetch('https://raw.githubusercontent.com/codeforamerica/click_that_hood/master/public/data/brazil-states.geojson').then(r => r.json());
+
+        Promise.all([pMundo, pBrasil]).then(([dataMundo, dataBrasil]) => {
+            
+            const styleCustom = function(feature, isState) {
+                // CORREÇÃO: Ampliada a busca pelo nome do país para suportar qualquer formato de GeoJSON e liberar o clique
+                const nomeGeo = isState ? feature.properties.name : (feature.properties.ADMIN || feature.properties.NAME || feature.properties.name || "Desconhecido");
+                if (nomeGeo === "Desconhecido") return { fillColor: '#cccccc', weight: 0, fillOpacity: 0, color: 'transparent' };
+                return {
+                    fillColor: getColorParaPais(nomeGeo, isState),
+                    weight: 1.5, // Bordas grossas brancas padronizadas para TODOS (países e estados)
+                    opacity: 1,
+                    color: '#ffffff',
+                    fillOpacity: 0.85
+                };
+            };
+
+            const onEachFeatureCustom = function (feature, layer, isState) {
+                const nomeGeo = isState ? feature.properties.name : (feature.properties.ADMIN || feature.properties.NAME || feature.properties.name || "Desconhecido");
+                if (nomeGeo === "Desconhecido") return;
+                
+                const nomeReal = dicNomesMapa[nomeGeo] || nomeGeo;
+                
+                // Rótulo flutuante com o nome
+                layer.bindTooltip(`<b>${nomeReal}</b>`, { permanent: false, direction: 'auto' });
+
+                layer.on('click', function (e) {
+                    const soberanoDropdown = document.getElementById('select-pais-soberano').value;
+                    const soberanoAtual = getSoberano(nomeGeo, isState);
+                    const safeNome = encodeURIComponent(nomeReal).replace(/'/g, "%27");
+
+                    // UI do Popup focada puramente em Domínio Territorial
+                    let html = `<div style="font-family:sans-serif; min-width:200px; color:#333; text-align:center;">`;
+                    
+                    // Adição: Identificador claro se é um País Inteiro ou um Estado
+                    const badgeTipo = isState ? "📍 Estado/Província" : "🌎 País (Território Nacional)";
+                    html += `<p style="margin:0 0 2px 0; font-size:0.7em; color:#888; text-transform:uppercase; letter-spacing:1px;">${badgeTipo}</p>`;
+                    
+                    html += `<h3 style="margin:0 0 5px 0; color:var(--primary);">${nomeReal}</h3>`;
+                    
+                    if (soberanoAtual) {
+                        html += `<p style="margin:0 0 10px 0; font-size:0.9em;">Domínio Atual: <b style="color:var(--accent)">${soberanoAtual.nome}</b></p>`;
+                    } else {
+                        html += `<p style="margin:0 0 10px 0; font-size:0.9em; color:#888;"><i>Território Independente/Neutro</i></p>`;
+                    }
+
+                    // Botão de ataque/anexação limpo e direto
+                    if (soberanoDropdown) {
+                        html += `<hr style="border: 0.5px dashed #ccc; margin: 10px 0;">`;
+                        html += `<p style="margin:0 0 5px 0; font-size:0.8em;">Expandir fronteiras para: <b>${soberanoDropdown}</b></p>`;
+                        html += `<button class="btn btn-success btn-sm" style="width:100%; margin:0;" onclick="window.anexarPeloMapa('${safeNome}')">⚔️ Anexar a ${soberanoDropdown}</button>`;
+                    } else {
+                        html += `<hr style="border: 0.5px dashed #ccc; margin: 10px 0;">`;
+                        html += `<p style="margin:0; font-size:0.8em; color:var(--danger);">Selecione um País Soberano na barra acima para anexar.</p>`;
+                    }
+
+                    html += `</div>`;
+                    layer.bindPopup(html).openPopup();
+                });
+            };
+
+            // Desenha o Mundo
+            L.geoJSON(dataMundo, {
+                filter: function(feature) { 
+                    const nm = feature.properties.ADMIN || feature.properties.NAME || feature.properties.name || "";
+                    return nm !== "Brazil" && nm !== "Brasil"; 
+                }, // Oculta o gigante para dar lugar aos estados
+                style: f => styleCustom(f, false),
+                onEachFeature: (f, l) => onEachFeatureCustom(f, l, false)
+            }).addTo(window.meuMapaLeaflet);
+
+            // Desenha os Estados do Brasil
+            L.geoJSON(dataBrasil, {
+                style: f => styleCustom(f, true),
+                onEachFeature: (f, l) => onEachFeatureCustom(f, l, true)
+            }).addTo(window.meuMapaLeaflet);
+
+        }).catch(err => console.error("Erro ao carregar mapas:", err));
+
+        window.mapaIniciado = true;
+        
+        setTimeout(function(){ 
+            window.meuMapaLeaflet.invalidateSize(); 
+        }, 300);
+    }
+
+    // --- GERENCIADOR DE CORES DOS PAÍSES (MODAL DA ABA 11) ---
+    function abrirGerenciadorCoresMapa() {
+        renderizarListaCoresMapa();
+        document.getElementById('cor-paises-modal').style.display = 'flex';
+    }
+
+    function fecharGerenciadorCoresMapa() {
+        document.getElementById('cor-paises-modal').style.display = 'none';
+    }
+
+    function renderizarListaCoresMapa() {
+        const container = document.getElementById('listaCoresPaises');
+        if (!container) return;
+        container.innerHTML = '';
+        
+        // Mapeia mantendo o índice original para atualizar o bancoDados corretamente e ordena alfabeticamente
+        const paisesOrdenados = bancoDados.paises.map((p, i) => ({...p, originalIndex: i})).sort((a, b) => a.nome.localeCompare(b.nome));
+
+        paisesOrdenados.forEach((pais) => {
+            // Oculta países que foram anexados por outros (perderam soberania e agora seguem a cor do dominador)
+            const isAnexado = bancoDados.paises.some(p => p.nome !== pais.nome && p.territorios && p.territorios.some(t => t.nome === pais.nome));
+            if (isAnexado) return;
+
+            const corPais = pais.cor || '#3498db'; // Fallback para azul se o país ainda não tiver cor definida
+            
+            container.innerHTML += `
+                <div style="display: flex; align-items: center; gap: 10px; background: rgba(0,0,0,0.05); padding: 8px; border-radius: 4px; border: 1px solid var(--border-color);">
+                    <input type="color" value="${corPais}" onchange="updCorPaisMapaExt(${pais.originalIndex}, this.value)" style="width: 30px; height: 30px; padding: 0; border: none; cursor: pointer;" title="Mudar Cor no Mapa">
+                    <span style="font-weight: bold; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${pais.nome}">${pais.nome}</span>
+                </div>
+            `;
+        });
+    }
+
+    function updCorPaisMapaExt(index, cor) {
+        if (!bancoDados.paises[index]) return;
+        bancoDados.paises[index].cor = cor;
+        salvarDadosLocal();
+        
+        // Atualiza as tabelas da Aba 10/11 visualmente para refletir as novas cores
+        renderizarNacoes(); 
+        renderizarTerritorios();
+        
+        // Mágica: Repinta o mapa interativo instantaneamente sem recarregar a tela
+        if (window.meuMapaLeaflet) {
+            window.meuMapaLeaflet.eachLayer(function (layer) {
+                if (layer.feature && layer.feature.properties) {
+                    const props = layer.feature.properties;
+                    const isStateLayer = props.sigla !== undefined || (props.name && !props.ADMIN && !props.NAME);
+                    const nm = isStateLayer ? props.name : (props.ADMIN || props.NAME || props.name);
+                    
+                    if (nm && nm !== "Desconhecido") {
+                        layer.setStyle({ fillColor: getColorParaPais(nm, isStateLayer) });
+                    }
+                }
+            });
+        }
+    }
+
+    // Função Injetora Mestra de Anexação Clicável
+    window.anexarPeloMapa = function(safeNome) {
+        const nomeTerritorio = decodeURIComponent(safeNome);
+        const select = document.getElementById('select-pais-soberano');
+        const nomePaisSoberano = select.value;
+        
+        if (!nomePaisSoberano) {
+            alert("Selecione um país soberano válido na lista acima.");
+            return;
+        }
+
+        const paisIndex = bancoDados.paises.findIndex(p => p.nome === nomePaisSoberano);
+        if (paisIndex === -1) return;
+
+        if (nomePaisSoberano.toLowerCase() === nomeTerritorio.toLowerCase()) {
+            alert("O país não pode anexar a si mesmo!");
+            return;
+        }
+
+        if (!bancoDados.paises[paisIndex].territorios) bancoDados.paises[paisIndex].territorios = [];
+        if (bancoDados.paises[paisIndex].territorios.some(t => t.nome === nomeTerritorio)) {
+            alert(`Atenção: A região de ${nomeTerritorio} já está sob o domínio de ${nomePaisSoberano}.`);
+            return;
+        }
+
+        // 1. Desanexa do antigo dono (limpa a matriz)
+        bancoDados.paises.forEach(p => {
+            if (p.territorios) {
+                p.territorios = p.territorios.filter(t => t.nome !== nomeTerritorio);
+            }
+        });
+
+        const dataMundoInput = document.getElementById('dataAtual').value;
+        const dataLog = dataMundoInput ? dataMundoInput : new Date().toLocaleDateString('pt-BR');
+        
+        // 2. Anexa ao novo Império
+        bancoDados.paises[paisIndex].territorios.push({
+            nome: nomeTerritorio,
+            notas: "Anexado taticamente pelo Mapa"
+        });
+
+        // 3. Transfere Demografia e Registra Log de Guerra se for um país da Aba 10 sendo engolido
+        const indexPaisAnexado = bancoDados.paises.findIndex(p => p.nome.toLowerCase() === nomeTerritorio.toLowerCase());
+        if (indexPaisAnexado !== -1) {
+            let paisAlvo = bancoDados.paises[indexPaisAnexado];
+            let paisDominador = bancoDados.paises[paisIndex];
+
+            // 3.1 Transfere a População
+            let pctSoberano = parseFloat(paisDominador.pct) || 0;
+            let pctAnexado = parseFloat(paisAlvo.pct) || 0;
+            paisDominador.pct = pctSoberano + pctAnexado;
+            paisAlvo.pct = 0; // Fica com zero, pois foi absorvido
+
+            // 3.2 Transfere os territórios que o país conquistado já possuía
+            if (paisAlvo.territorios && paisAlvo.territorios.length > 0) {
+                paisAlvo.territorios.forEach(t => {
+                    // Evita auto-anexação em loop
+                    if (t.nome !== paisDominador.nome) {
+                        paisDominador.territorios.push({
+                            nome: t.nome,
+                            notas: `Espólio de guerra: Era de ${nomeTerritorio}`
+                        });
+                    }
+                });
+                paisAlvo.territorios = []; // O país derrotado perde todos os seus estados/colônias
+            }
+            
+            // 3.3 Registra Log Político no Derrotado
+            if (!bancoDados.nacoesInfo[nomeTerritorio]) bancoDados.nacoesInfo[nomeTerritorio] = { politica: "" };
+            let notaAtualAnexado = bancoDados.nacoesInfo[nomeTerritorio].politica || "";
+            let logAnexado = `Soberania perdida: Tomado por ${nomePaisSoberano} em ${dataLog}`;
+            bancoDados.nacoesInfo[nomeTerritorio].politica = notaAtualAnexado ? `${notaAtualAnexado}; ${logAnexado}` : logAnexado;
+        }
+
+        // 4. Registra expansão no país Dominador
+        if (!bancoDados.nacoesInfo[nomePaisSoberano]) bancoDados.nacoesInfo[nomePaisSoberano] = { politica: "" };
+        let notaAtualSoberano = bancoDados.nacoesInfo[nomePaisSoberano].politica || "";
+        let logSoberano = `Expansão de Domínio: Anexou ${nomeTerritorio} em ${dataLog}`;
+        bancoDados.nacoesInfo[nomePaisSoberano].politica = notaAtualSoberano ? `${notaAtualSoberano}; ${logSoberano}` : logSoberano;
+
+        salvarDadosLocal();
+        renderizarNacoes();
+        renderizarTerritorios();
+        renderizarDropdownPaisesMapa(); // Atualiza o dropdown para remover países que perderam a soberania
+        
+        // 5. Repinta o Mapa na hora (A mágica visual)
+        if (window.meuMapaLeaflet) {
+            window.meuMapaLeaflet.eachLayer(function (layer) {
+                if (layer.feature && layer.feature.properties) {
+                    // Heurística para garantir que repinta ambos (estados e países) corretamente
+                    const props = layer.feature.properties;
+                    const isStateLayer = props.sigla !== undefined || (props.name && !props.ADMIN && !props.NAME);
+                    const nm = isStateLayer ? props.name : (props.ADMIN || props.NAME || props.name);
+                    
+                    if (nm && nm !== "Desconhecido") {
+                        layer.setStyle({ fillColor: getColorParaPais(nm, isStateLayer) });
+                    }
+                }
+            });
+            window.meuMapaLeaflet.closePopup();
+        }
+    }
+
 </script>
 
 </body></html>
