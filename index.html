@@ -1,7 +1,7 @@
 <html lang="pt-br"><head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Códice - A Fenda (v17.3)</title>
+<title>Códice - A Fenda (v18.0)</title>
 <!-- BIBLIOTECA ADICIONADA PARA DOCX -->
 <script src="https://unpkg.com/html-docx-js/dist/html-docx.js"></script>
 <!-- BIBLIOTECAS ADICIONADAS PARA O MAPA LEAFLET -->
@@ -288,7 +288,7 @@
 <div id="aba-regras" class="content active">
     <div class="panel">
         <div class="header-row">
-            <h2>Painel de Controle &amp; Protocolo (v17.3)</h2>
+            <h2>Painel de Controle &amp; Protocolo (v18.0)</h2>
             <div>
                 <button class="btn btn-success" onclick="salvarDadosLocal()">💾 Salvar (Navegador)</button>
                 <button class="btn btn-warning" onclick="baixarBackupCompleto()">📦 Baixar TUDO (Backup JSON)</button>
@@ -690,19 +690,18 @@
                 <thead>
                     <tr>
                         <th class="sortable" style="width: 70px;"><input type="checkbox" onclick="toggleSelecionarTudo(this, 'check-nacao')" title="Todos"> Info</th>
-                        <th class="sortable" style="width: 12%;" onclick="ordenarTabelaNacoes('nome')">País <span id="sort-nacoes-nome" class="sort-icon"></span></th>
-                        <th class="sortable" style="width: 7%;" onclick="ordenarTabelaNacoes('pct')">% Pop <span id="sort-nacoes-pct" class="sort-icon"></span></th>
-                        <th style="width: 10%;">População Total</th>
+                        <th class="sortable" style="width: 15%;" onclick="ordenarTabelaNacoes('nome')">País <span id="sort-nacoes-nome" class="sort-icon"></span></th>
+                        <th class="sortable" style="width: 10%;" onclick="ordenarTabelaNacoes('pct')">% Pop <span id="sort-nacoes-pct" class="sort-icon"></span></th>
+                        <th style="width: 9%;">População Total</th>
                         <th style="width: 6%;" title="Contagem real da Aba Personagens">SSS (Real)</th>
-                        <th style="width: 5%;" title="Soma dos reais com a estimativa">SS (Est.+Real)</th>
-                        <th style="width: 5%;" title="Soma dos reais com a estimativa">S (Est.+Real)</th>
-                        <th style="width: 5%;" title="Soma dos reais com a estimativa">A (Est.+Real)</th>
-                        <th style="width: 5%;">B (Est.)</th>
-                        <th style="width: 5%;">C (Est.)</th>
-                        <th style="width: 5%;">D (Est.)</th>
-                        <th style="width: 5%;">E (Est.)</th>
-                        <th class="sortable" style="width: 10%;" onclick="ordenarTabelaNacoes('poderTotal')">Poder Total (Real + Est.) <span id="sort-nacoes-poderTotal" class="sort-icon"></span></th>
-                        <th style="width: 15%;">Política / Notas</th>
+                        <th style="width: 6%;" title="Soma dos reais com a estimativa">SS (Est.+Real)</th>
+                        <th style="width: 6%;" title="Soma dos reais com a estimativa">S (Est.+Real)</th>
+                        <th style="width: 6%;" title="Soma dos reais com a estimativa">A (Est.+Real)</th>
+                        <th style="width: 6%;">B (Est.)</th>
+                        <th style="width: 6%;">C (Est.)</th>
+                        <th style="width: 6%;">D (Est.)</th>
+                        <th style="width: 6%;">E (Est.)</th>
+                        <th class="sortable" style="width: 11%;" onclick="ordenarTabelaNacoes('poderTotal')">Poder Total (Real + Est.) <span id="sort-nacoes-poderTotal" class="sort-icon"></span></th>
                         <th class="no-print" style="width: 60px;">Ações</th>
                     </tr>
                 </thead>
@@ -2183,7 +2182,7 @@ ${textoAtual.slice(-6000)}`;
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = `Codice_A_Fenda_v17.3_${getFormattedDate()}.html`;
+        a.download = `Codice_A_Fenda_v18.0_${getFormattedDate()}.html`;
         document.body.appendChild(a); a.click(); document.body.removeChild(a);
         setTimeout(() => URL.revokeObjectURL(url), 1500);
     }
@@ -3051,6 +3050,7 @@ ${textoAtual.slice(-6000)}`;
             if(!Array.isArray(paisObj.lideres)) paisObj.lideres = [];
             if(!Array.isArray(paisObj.vassalos)) paisObj.vassalos = [];
             if(!Array.isArray(paisObj.hierarquia)) paisObj.hierarquia = [];
+            if(!Array.isArray(paisObj.notas)) paisObj.notas = [];
 
             const pct = paisObj.pct;
             const popPais = Math.floor(popTotal * pct);
@@ -3088,12 +3088,29 @@ ${textoAtual.slice(-6000)}`;
             });
             let poderFmt = poderTotal > 1e9 ? (poderTotal/1e9).toFixed(1) + " B" : poderTotal.toLocaleString('pt-BR');
             row += `<td class="number-cell" style="color:var(--success)">${poderFmt}</td>
-                    <td contenteditable="true" class="editable" onblur="salvarInfoNacao('${pais}', 'politica', this.innerText)">${info.politica}</td>
                     <td class="no-print"><button class="btn btn-danger btn-sm" onclick="delItem('paises', ${index})">X</button></td>
                 </tr>`;
 
-            row += `<tr id="detalhe-nacao-${index}" style="display:none" class="org-detail-row"><td colspan="15">
+            row += `<tr id="detalhe-nacao-${index}" style="display:none" class="org-detail-row"><td colspan="14">
                 <div class="char-detail-container">
+                    <div style="margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px dashed var(--border-color);">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                            <h4 style="margin: 0; color: var(--accent);">📝 Notas & História</h4>
+                            <button class="btn btn-sm btn-secondary" onclick="addNacaoNota(${index})">+ Nova Nota</button>
+                        </div>
+                        <textarea style="width:100%; min-height: 250px; resize: vertical; margin-bottom: 10px; font-family: inherit; font-size: 0.95em;" onblur="salvarInfoNacao('${pais}', 'politica', this.value)" placeholder="Escreva as anotações gerais da nação aqui...">${info.politica || ''}</textarea>
+                        
+                        <div class="timeline-box" style="max-height: none; background: transparent; border: none; padding: 0;">
+                            ${[...paisObj.notas].reverse().map((n, idx) => `
+                                <div class="timeline-item" style="background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 4px; padding: 10px; margin-bottom: 8px;">
+                                    <div class="timeline-date" contenteditable="true" onblur="updateDetailNacao(${index}, 'notas', ${paisObj.notas.length-1-idx}, 'data', this.innerText)" style="min-width: 150px;">${n.data||'-'}</div>
+                                    <div class="timeline-content">
+                                        <div contenteditable="true" onblur="updateDetailNacao(${index}, 'notas', ${paisObj.notas.length-1-idx}, 'texto', this.innerText)" style="min-height: 20px; line-height: 1.5;">${n.texto}</div>
+                                        <button class="btn-del-mini" style="position: absolute; right: 5px; top: 5px;" onclick="deleteDetailNacao(${index}, 'notas', ${paisObj.notas.length-1-idx})">x</button>
+                                    </div>
+                                </div>`).join('')}
+                        </div>
+                    </div>
                     <div class="org-detail-grid">
                         <div>
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
@@ -3189,6 +3206,17 @@ ${textoAtual.slice(-6000)}`;
         const d = prompt("Data/Época:", document.getElementById('dataAtual').value);
         const regra = prompt("Regra/Estrutura Política:");
         if(regra) { bancoDados.paises[i].hierarquia.push({data:d, regra:regra}); renderizarNacoes(); }
+    }
+
+    function addNacaoNota(i) {
+        const d = prompt("Título ou Data da Nota:", document.getElementById('dataAtual').value);
+        const texto = prompt("Conteúdo da nota:");
+        if(texto) { 
+            if(!Array.isArray(bancoDados.paises[i].notas)) bancoDados.paises[i].notas = [];
+            bancoDados.paises[i].notas.push({data:d, texto:texto}); 
+            renderizarNacoes(); 
+            salvarDadosLocal();
+        }
     }
 
     function updPais(index, field, val) {
