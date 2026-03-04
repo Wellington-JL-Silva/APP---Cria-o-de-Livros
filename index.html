@@ -1,7 +1,7 @@
 <html lang="pt-br"><head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Códice - A Fenda (v18.1)</title>
+<title>Códice - A Fenda (v18.5)</title>
 <!-- BIBLIOTECA ADICIONADA PARA DOCX -->
 <script src="https://unpkg.com/html-docx-js/dist/html-docx.js"></script>
 <!-- BIBLIOTECAS ADICIONADAS PARA O MAPA LEAFLET -->
@@ -288,7 +288,7 @@
 <div id="aba-regras" class="content active">
     <div class="panel">
         <div class="header-row">
-            <h2>Painel de Controle &amp; Protocolo (v18.1)</h2>
+            <h2>Painel de Controle &amp; Protocolo (v18.5)</h2>
             <div>
                 <button class="btn btn-success" onclick="salvarDadosLocal()">💾 Salvar (Navegador)</button>
                 <button class="btn btn-warning" onclick="baixarBackupCompleto()">📦 Baixar TUDO (Backup JSON)</button>
@@ -2182,7 +2182,7 @@ ${textoAtual.slice(-6000)}`;
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = `Codice_A_Fenda_v18.1_${getFormattedDate()}.html`;
+        a.download = `Codice_A_Fenda_v18.5_${getFormattedDate()}.html`;
         document.body.appendChild(a); a.click(); document.body.removeChild(a);
         setTimeout(() => URL.revokeObjectURL(url), 1500);
     }
@@ -2442,6 +2442,14 @@ ${textoAtual.slice(-6000)}`;
     // --- RENDERIZAÇÃO PERSONAGENS ---
     // --- RENDERIZAÇÃO OTIMIZADA (PERSONAGENS) ---
     function renderizarPersonagens() {
+        // Preserva o estado das abas expandidas antes de re-renderizar
+        let abertas = [];
+        document.querySelectorAll('#listaPersonagens .char-detail-row').forEach(row => {
+            if (row.style.display !== 'none') {
+                abertas.push(row.id);
+            }
+        });
+
         const tbody = document.getElementById('listaPersonagens');
         const dataMundoInput = document.getElementById('dataAtual').value;
         const hoje = dataMundoInput ? new Date(dataMundoInput) : new Date();
@@ -2523,7 +2531,7 @@ ${textoAtual.slice(-6000)}`;
                         <button class="btn btn-danger btn-sm" onclick="delItem('personagens', ${index})">X</button>
                     </td>
                 </tr>
-                <tr id="detalhe-${index}" style="display:none" class="char-detail-row"><td colspan="10">
+                <tr id="detalhe-${index}" style="display:${abertas.includes(`detalhe-${index}`) ? 'table-row' : 'none'}" class="char-detail-row"><td colspan="10">
                     <div class="char-detail-container">
                         <div class="detail-grid">
                             <div>
@@ -3025,6 +3033,14 @@ ${textoAtual.slice(-6000)}`;
     }
 
     function renderizarNacoes() {
+        // Preserva o estado das abas expandidas antes de re-renderizar
+        let abertas = [];
+        document.querySelectorAll('#listaNacoes .org-detail-row').forEach(row => {
+            if (row.style.display !== 'none') {
+                abertas.push(row.id);
+            }
+        });
+
         const tbody = document.getElementById('listaNacoes');
         tbody.innerHTML = '';
         
@@ -3093,11 +3109,12 @@ ${textoAtual.slice(-6000)}`;
                     <td class="no-print"><button class="btn btn-danger btn-sm" onclick="delItem('paises', ${index})">X</button></td>
                 </tr>`;
 
-            row += `<tr id="detalhe-nacao-${index}" style="display:none" class="org-detail-row"><td colspan="14">
+            let displayStyle = abertas.includes(`detalhe-nacao-${index}`) ? 'table-row' : 'none';
+            row += `<tr id="detalhe-nacao-${index}" style="display:${displayStyle}" class="org-detail-row"><td colspan="14">
                 <div class="char-detail-container">
                     <div style="margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px dashed var(--border-color);">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                            <h4 style="margin: 0; color: var(--accent);">📝 Notas & História</h4>
+                            <h4 style="margin: 0; color: var(--accent);">📝 Notas & Política</h4>
                             <button class="btn btn-sm btn-secondary" onclick="addNacaoNota(${index})">+ Nova Nota</button>
                         </div>
                         <textarea style="width:100%; min-height: 250px; resize: vertical; margin-bottom: 10px; font-family: inherit; font-size: 0.95em;" onblur="salvarInfoNacao('${pais}', 'politica', this.value)" placeholder="Escreva as anotações gerais da nação aqui...">${info.politica || ''}</textarea>
