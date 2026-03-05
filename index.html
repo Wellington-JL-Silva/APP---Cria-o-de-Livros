@@ -1,7 +1,7 @@
 <html lang="pt-br"><head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Códice - A Fenda (v18.5)</title>
+<title>Códice - A Fenda (v18.7)</title>
 <!-- BIBLIOTECA ADICIONADA PARA DOCX -->
 <script src="https://unpkg.com/html-docx-js/dist/html-docx.js"></script>
 <!-- BIBLIOTECAS ADICIONADAS PARA O MAPA LEAFLET -->
@@ -288,7 +288,7 @@
 <div id="aba-regras" class="content active">
     <div class="panel">
         <div class="header-row">
-            <h2>Painel de Controle &amp; Protocolo (v18.5)</h2>
+            <h2>Painel de Controle &amp; Protocolo (v18.7)</h2>
             <div>
                 <button class="btn btn-success" onclick="salvarDadosLocal()">💾 Salvar (Navegador)</button>
                 <button class="btn btn-warning" onclick="baixarBackupCompleto()">📦 Baixar TUDO (Backup JSON)</button>
@@ -689,7 +689,10 @@
             <table id="tabelaNacoes" style="table-layout: fixed; word-wrap: break-word;">
                 <thead>
                     <tr>
-                        <th class="sortable" style="width: 70px;"><input type="checkbox" onclick="toggleSelecionarTudo(this, 'check-nacao')" title="Todos"> Info</th>
+                        <th class="sortable" style="width: 70px;" onclick="ordenarTabelaNacoes('info')" title="Ordenar por quantidade de dados">
+                            <input type="checkbox" onclick="event.stopPropagation(); toggleSelecionarTudo(this, 'check-nacao')" title="Todos"> 
+                            Info <span id="sort-nacoes-info" class="sort-icon"></span>
+                        </th>
                         <th class="sortable" style="width: 15%;" onclick="ordenarTabelaNacoes('nome')">País <span id="sort-nacoes-nome" class="sort-icon"></span></th>
                         <th class="sortable" style="width: 10%;" onclick="ordenarTabelaNacoes('pct')">% Pop <span id="sort-nacoes-pct" class="sort-icon"></span></th>
                         <th style="width: 9%;">População Total</th>
@@ -2182,7 +2185,7 @@ ${textoAtual.slice(-6000)}`;
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = `Codice_A_Fenda_v18.5_${getFormattedDate()}.html`;
+        a.download = `Codice_A_Fenda_v18.7_${getFormattedDate()}.html`;
         document.body.appendChild(a); a.click(); document.body.removeChild(a);
         setTimeout(() => URL.revokeObjectURL(url), 1500);
     }
@@ -2429,6 +2432,16 @@ ${textoAtual.slice(-6000)}`;
                 return (pwrA - pwrB) * estadoOrdenacaoNacoes.direcao;
             }
 
+            if (coluna === 'info') {
+                const infoA = bancoDados.nacoesInfo[a.nome] || { politica: "" };
+                const countA = (a.lideres?.length || 0) + (a.vassalos?.length || 0) + (a.hierarquia?.length || 0) + (a.notas?.length || 0) + (infoA.politica && infoA.politica.trim() !== '' ? 1 : 0);
+
+                const infoB = bancoDados.nacoesInfo[b.nome] || { politica: "" };
+                const countB = (b.lideres?.length || 0) + (b.vassalos?.length || 0) + (b.hierarquia?.length || 0) + (b.notas?.length || 0) + (infoB.politica && infoB.politica.trim() !== '' ? 1 : 0);
+
+                return (countA - countB) * estadoOrdenacaoNacoes.direcao;
+            }
+
             let valA = a[coluna] || "";
             let valB = b[coluna] || "";
             if (coluna === 'pct') {
@@ -2664,7 +2677,7 @@ ${textoAtual.slice(-6000)}`;
                         </div>
                         <div style="margin-bottom: 15px;">
                             <h4>📜 Descrição & Propósito</h4>
-                            <textarea onblur="updOrg(${index}, 'descricao', this.value)" style="width:100%; height:60px;">${org.descricao || ''}</textarea>
+                            <textarea onblur="updOrg(${index}, 'descricao', this.value)" style="width:100%; min-height: 250px; resize: vertical; margin-bottom: 10px; font-family: inherit; font-size: 0.95em;">${org.descricao || ''}</textarea>
                         </div>
                         <div class="org-detail-grid">
                             <div>
@@ -3075,7 +3088,7 @@ ${textoAtual.slice(-6000)}`;
             const sssChars = bancoDados.personagens.filter(p => p.pais === pais && p.rank && p.rank.trim().toUpperCase() === 'SSS');
             const sssCount = sssChars.length;
             const sssPower = sssChars.reduce((sum, p) => sum + parseInt(p.np || 0), 0);
-            const infoCount = paisObj.lideres.length + paisObj.vassalos.length + paisObj.hierarquia.length;
+            const infoCount = paisObj.lideres.length + paisObj.vassalos.length + paisObj.hierarquia.length + paisObj.notas.length + (info.politica && info.politica.trim() !== '' ? 1 : 0);
 
             let row = `<tr>
                 <td style="white-space:nowrap;">
@@ -3083,7 +3096,7 @@ ${textoAtual.slice(-6000)}`;
                     <span style="cursor:pointer" onclick="toggleDetalhesNacao(${index})">➕ <span class="badge-info">${infoCount}</span></span>
                 </td>
                 <td contenteditable="true" class="editable" onblur="updPais(${index}, 'nome', this.innerText)"><b>${pais}</b></td>
-                <td contenteditable="true" class="editable" onblur="updPais(${index}, 'pct', this.innerText)">${(pct*100).toFixed(4)}%</td>
+                <td contenteditable="true" class="editable" onblur="updPais(${index}, 'pct', this.innerText)">${(pct*100).toFixed(5)}%</td>
                 <td class="number-cell">${popPais.toLocaleString('pt-BR')}</td>
                 <td class="number-cell" style="color:purple; font-weight:bold">${sssCount}</td>`;
                 
