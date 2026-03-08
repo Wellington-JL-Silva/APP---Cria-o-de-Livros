@@ -1,7 +1,7 @@
 <html lang="pt-br"><head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Códice - A Fenda (v18.7)</title>
+<title>Códice - A Fenda (v18.9)</title>
 <!-- BIBLIOTECA ADICIONADA PARA DOCX -->
 <script src="https://unpkg.com/html-docx-js/dist/html-docx.js"></script>
 <!-- BIBLIOTECAS ADICIONADAS PARA O MAPA LEAFLET -->
@@ -288,7 +288,7 @@
 <div id="aba-regras" class="content active">
     <div class="panel">
         <div class="header-row">
-            <h2>Painel de Controle &amp; Protocolo (v18.7)</h2>
+            <h2>Painel de Controle &amp; Protocolo (v18.9)</h2>
             <div>
                 <button class="btn btn-success" onclick="salvarDadosLocal()">💾 Salvar (Navegador)</button>
                 <button class="btn btn-warning" onclick="baixarBackupCompleto()">📦 Baixar TUDO (Backup JSON)</button>
@@ -2185,7 +2185,7 @@ ${textoAtual.slice(-6000)}`;
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = `Codice_A_Fenda_v18.7_${getFormattedDate()}.html`;
+        a.download = `Codice_A_Fenda_v18.9_${getFormattedDate()}.html`;
         document.body.appendChild(a); a.click(); document.body.removeChild(a);
         setTimeout(() => URL.revokeObjectURL(url), 1500);
     }
@@ -3083,6 +3083,8 @@ ${textoAtual.slice(-6000)}`;
             if(!Array.isArray(paisObj.hierarquia)) paisObj.hierarquia = [];
             if(!Array.isArray(paisObj.notas)) paisObj.notas = [];
 
+            paisObj.notas.sort((a, b) => String(a.data || '').localeCompare(String(b.data || ''), undefined, {numeric: true, sensitivity: 'base'}));
+
             const pct = paisObj.pct;
             const popPais = Math.floor(popTotal * pct);
             const sssChars = bancoDados.personagens.filter(p => p.pais === pais && p.rank && p.rank.trim().toUpperCase() === 'SSS');
@@ -3127,7 +3129,7 @@ ${textoAtual.slice(-6000)}`;
                 <div class="char-detail-container">
                     <div style="margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px dashed var(--border-color);">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                            <h4 style="margin: 0; color: var(--accent);">📝 Notas & Política</h4>
+                            <h4 style="margin: 0; color: var(--accent);">📝 Notas & História</h4>
                             <button class="btn btn-sm btn-secondary" onclick="addNacaoNota(${index})">+ Nova Nota</button>
                         </div>
                         <textarea style="width:100%; min-height: 250px; resize: vertical; margin-bottom: 10px; font-family: inherit; font-size: 0.95em;" onblur="salvarInfoNacao('${pais}', 'politica', this.value)" placeholder="Escreva as anotações gerais da nação aqui...">${info.politica || ''}</textarea>
